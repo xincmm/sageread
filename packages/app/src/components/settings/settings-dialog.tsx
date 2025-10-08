@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import { useProviderStore } from "@/store/provider-store";
 import { ChevronRight, Server } from "lucide-react";
 import { useState } from "react";
-import AppearanceSettings from "./appearance";
 import FontManager from "./font-manager";
 import GeneralSettings from "./general";
 import LlamaSettings from "./llama";
@@ -22,7 +21,6 @@ interface SettingsDialogProps {
 
 type SettingsKey =
   | "general"
-  | "appearance"
   | "font-manager"
   | "llama"
   | "tts"
@@ -69,7 +67,6 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
 
   const settingsItems: SettingsItem[] = [
     { key: "general", label: _("General") },
-    { key: "appearance", label: _("Appearance") },
     { key: "font-manager", label: "字体管理" },
     { key: "llama", label: "向量模型" },
     { key: "tts", label: "语音模型" },
@@ -111,8 +108,6 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
         return (
           <ProvidersSettings onProviderSelect={(providerId) => setActiveKey(`provider-${providerId}` as SettingsKey)} />
         );
-      case "appearance":
-        return <AppearanceSettings />;
       case "font-manager":
         return <FontManager />;
       case "shortcuts":

@@ -1,11 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/hooks/use-translation";
+import { useThemeStore } from "@/store/theme-store";
+import type { ThemeMode } from "@/styles/themes";
 import { appDataDir } from "@tauri-apps/api/path";
 import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { openPath } from "@tauri-apps/plugin-opener";
-
-import { Check, Copy, ExternalLink, FolderOpen } from "lucide-react";
+import clsx from "clsx";
+import { Check, ChevronDownIcon, Copy, FolderOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function GeneralSettings() {
@@ -13,35 +21,46 @@ export default function GeneralSettings() {
   const [isCopied, setIsCopied] = useState(false);
   const _ = useTranslation();
 
+  const {
+    themeMode,
+    themeColor,
+    autoScroll,
+    swapSidebars,
+    setThemeMode,
+    setThemeColor,
+    setAutoScroll,
+    setSwapSidebars,
+  } = useThemeStore();
+
+  const themeModeOptions = [
+    { value: "auto" as ThemeMode, label: "System" },
+    { value: "light" as ThemeMode, label: "Light" },
+    { value: "dark" as ThemeMode, label: "Dark" },
+  ];
+
+  const themeColorOptions = [
+    { value: "default", label: "Default" },
+    { value: "perplexity", label: "Perplexity" },
+    { value: "slack", label: "Slack" },
+    { value: "corporate", label: "Corporate" },
+    { value: "nature", label: "Nature" },
+  ];
+
   useEffect(() => {
     appDataDir().then(async (path) => {
       setDataPath(path);
       try {
         const appDataDirPath = await appDataDir();
-        console.log("Target directory is:", appDataDirPath);
-
         const directoryExists = await exists(appDataDirPath);
-
-        console.log("Directory exists:", directoryExists);
 
         if (!directoryExists) {
           await mkdir(appDataDirPath, { recursive: true });
-          console.log("Directory did not exist, created it.");
         }
-
-        console.log("Successfully wrote config file!");
       } catch (error) {
         console.error("An error occurred:", error);
       }
     });
   }, []);
-  const handleCheckUpdates = () => {
-    console.log("Check for updates");
-  };
-
-  const handleOpenLogs = () => {
-    console.log("Open logs");
-  };
 
   const handleShowInFinder = async () => {
     try {
@@ -61,102 +80,124 @@ export default function GeneralSettings() {
     }
   };
 
-  const handleReset = () => {
-    if (confirm(_("Are you sure you want to reset to factory settings? This action is irreversible."))) {
-      console.log("Reset to factory settings");
-    }
+  const handleThemeModeChange = (mode: ThemeMode) => {
+    setThemeMode(mode);
+  };
+
+  const handleThemeColorChange = (color: string) => {
+    setThemeColor(color);
+  };
+
+  const getCurrentThemeModeLabel = () => {
+    return themeModeOptions.find((option) => option.value === themeMode)?.label || "System";
+  };
+
+  const getCurrentThemeColorLabel = () => {
+    return themeColorOptions.find((option) => option.value === themeColor)?.label || "Default";
   };
 
   return (
     <div className="space-y-8 p-4 pt-3">
-      <section className="rounded-lg bg-muted/80 p-4 ">
-        <h2 className="text mb-4 dark:text-neutral-200">{_("General")}</h2>
-
+      <section className="rounded-lg bg-muted/80 p-4">
+        <h2 className="text mb-4 dark:text-neutral-200">外观</h2>
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-neutral-200 border-b pb-4 dark:border-neutral-700">
-            <span className="text-sm dark:text-neutral-200">{_("App Version")}</span>
-            <div className="text-neutral-600 text-xs dark:text-neutral-400">v0.6.8</div>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text dark:text-neutral-200">主题风格</span>
+              <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">选择您偏好的主题风格</p>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" className="w-32 justify-between">
+                  {getCurrentThemeColorLabel()}
+                  <ChevronDownIcon className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-32">
+                {themeColorOptions.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onClick={() => handleThemeColorChange(option.value)}
+                    className={clsx("my-0.5", themeColor === option.value ? "bg-accent" : "")}
+                  >
+                    {option.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm dark:text-neutral-200">{_("Check for Updates")}</span>
-              <p className="text-neutral-600 text-xs dark:text-neutral-400">
-                {_("Check if a newer version of Jan is available.")}
-              </p>
+              <span className="text dark:text-neutral-200">明暗模式</span>
+              <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">选择明暗模式偏好</p>
             </div>
-            <Button onClick={handleCheckUpdates} size="xs" variant="soft">
-              {_("Check for Updates")}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" className="w-32 justify-between">
+                  {getCurrentThemeModeLabel()}
+                  <ChevronDownIcon className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-32">
+                {themeModeOptions.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onClick={() => handleThemeModeChange(option.value)}
+                    className={clsx("my-0.5", themeMode === option.value ? "bg-accent" : "")}
+                  >
+                    {option.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text dark:text-neutral-200">自动滚动</span>
+              <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">聊天时自动滚动到最新消息</p>
+            </div>
+            <Checkbox
+              checked={autoScroll}
+              onCheckedChange={(checked) => setAutoScroll(checked === true)}
+              className="data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text dark:text-neutral-200">对调侧边栏</span>
+              <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">将聊天和笔记侧边栏位置对调</p>
+            </div>
+            <Checkbox
+              checked={swapSidebars}
+              onCheckedChange={(checked) => setSwapSidebars(checked === true)}
+              className="data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+            />
           </div>
         </div>
       </section>
 
-      <section className="rounded-lg bg-muted/80 p-4 ">
+      <section className="rounded-lg bg-muted/80 p-4">
         <h2 className="text mb-4 dark:text-neutral-200">{_("Data Folder")}</h2>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-neutral-200 border-b pb-4 dark:border-neutral-700">
-            <div>
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
               <span className="text-sm dark:text-neutral-200">{_("App Data")}</span>
               <div className="mt-2 flex items-center gap-2">
                 <span className="rounded bg-background px-2 py-1 text-sm dark:bg-neutral-700 dark:text-neutral-300">
                   {dataPath}
                 </span>
-                <Button size="sm" variant="ghost" onClick={handleCopyPath} className="size-6 p-0">
+                <Button size="sm" variant="soft" onClick={handleCopyPath} className="size-6 p-0">
                   {isCopied ? <Check className="size-3 text-green-500" /> : <Copy className="size-3" />}
+                </Button>
+                <Button size="sm" variant="soft" onClick={handleShowInFinder} className="size-6 p-0">
+                  <FolderOpen className="size-3" />
                 </Button>
               </div>
             </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-sm dark:text-neutral-200">{_("App Logs")}</span>
-              <p className="text-neutral-600 text-xs dark:text-neutral-400">{_("View detailed logs of the App.")}</p>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleOpenLogs} variant="outline" size="xs">
-                <ExternalLink className="size-4" />
-                {_("Open Logs")}
-              </Button>
-              <Button onClick={handleShowInFinder} variant="soft" size="xs">
-                <FolderOpen className="h-4 w-4" />
-                {_("Show in Finder")}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-lg bg-muted/80 p-4 ">
-        <h2 className="text mb-4 dark:text-neutral-200">{_("Advanced")}</h2>
-
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-sm dark:text-neutral-200">{_("Experimental Features")}</span>
-              <p className="text-neutral-600 text-xs dark:text-neutral-400">
-                {_("Enable experimental features. They may be unstable or change at any time.")}
-              </p>
-            </div>
-            <div className="flex items-center">
-              <Checkbox id="experimental-features" defaultChecked={false} />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <span className="text-sm dark:text-neutral-200">{_("Reset To Factory Settings")}</span>
-              <p className="text-neutral-600 text-xs dark:text-neutral-400">
-                {_(
-                  "Restore application to its initial state, erasing all models and chat history. This action is irreversible and recommended only if the application is corrupted.",
-                )}
-              </p>
-            </div>
-            <Button onClick={handleReset} size="xs" variant="destructive">
-              {_("Reset")}
-            </Button>
           </div>
         </div>
       </section>
