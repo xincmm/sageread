@@ -1,0 +1,12 @@
+[default]
+description = "Default permissions for the epub plugin"
+permissions = [
+    "allow-parse-epub",
+    "allow-index-epub",
+    "allow-search-db",
+    "allow-convert-to-mdbook",
+    "allow-parse-toc",
+    "allow-get-chunk-with-context",
+    "allow-get-toc-chunks",
+    "allow-get-chunks-by-range",
+]

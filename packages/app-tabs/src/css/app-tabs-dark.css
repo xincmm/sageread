@@ -1,0 +1,50 @@
+.chrome-tabs.chrome-tabs-dark-theme {
+  background: transparent;
+}
+.chrome-tabs.chrome-tabs-dark-theme .chrome-tab .chrome-tab-dividers::after {
+  background: #6b7280;
+}
+.chrome-tabs.chrome-tabs-dark-theme .chrome-tab .chrome-tab-background > svg .chrome-tab-geometry {
+  display: none;
+}
+.chrome-tabs.chrome-tabs-dark-theme .chrome-tab[active] .chrome-tab-background > svg .chrome-tab-geometry {
+  display: none;
+}
+.chrome-tabs.chrome-tabs-dark-theme .chrome-tab {
+  background: transparent;
+}
+.chrome-tabs.chrome-tabs-dark-theme .chrome-tab[active] {
+  background: var(--color-neutral-800);
+  border-color: var(--color-neutral-700);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+@media (hover: hover) {
+  .chrome-tabs.chrome-tabs-dark-theme .chrome-tab:not([active]):hover {
+    background: var(--color-neutral-800);
+    border-color: var(--color-neutral-700);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+}
+.chrome-tabs.chrome-tabs-dark-theme .chrome-tab .chrome-tab-title {
+  color: var(--color-neutral-300);
+}
+.chrome-tabs.chrome-tabs-dark-theme .chrome-tab[active] .chrome-tab-title {
+  color: var(--color-neutral-100);
+}
+.chrome-tabs.chrome-tabs-dark-theme .chrome-tab .chrome-tab-close {
+  background: linear-gradient(to right, transparent 0%, var(--color-neutral-800) 30%, var(--color-neutral-800) 100%);
+}
+.chrome-tabs.chrome-tabs-dark-theme .chrome-tab .chrome-tab-close::before {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path stroke='rgba(163, 163, 163, .8)' stroke-linecap='square' stroke-width='1.5' d='M0 0 L8 8 M8 0 L0 8'></path></svg>");
+}
+.chrome-tabs.chrome-tabs-dark-theme .chrome-tab .chrome-tab-close:hover::before {
+  background-color: var(--color-neutral-600);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path stroke='rgba(229, 229, 229, .9)' stroke-linecap='square' stroke-width='1.5' d='M0 0 L8 8 M8 0 L0 8'></path></svg>");
+}
+.chrome-tabs.chrome-tabs-dark-theme .chrome-tab .chrome-tab-close:active::before {
+  background-color: var(--color-neutral-700);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path stroke='rgba(229, 229, 229, .9)' stroke-linecap='square' stroke-width='1.5' d='M0 0 L8 8 M8 0 L0 8'></path></svg>");
+}
+.chrome-tabs.chrome-tabs-dark-theme .chrome-tabs-bottom-bar {
+  display: none;
+}

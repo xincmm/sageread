@@ -1,0 +1,347 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+@custom-variant dark (&:is(.dark *));
+
+/* Import theme files */
+@import "./themes/default.css";
+@import "./themes/perplexity.css";
+@import "./themes/slack.css";
+@import "./themes/corporate.css";
+@import "./themes/nature.css";
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+:root {
+  --font-sans: Montserrat, sans-serif;
+  --font-serif: Merriweather, serif;
+  --font-mono: Source Code Pro, monospace;
+  --radius: 0.5rem;
+  --shadow-2xs: 0 1px 3px 0px oklch(0.00 0 0 / 0.05);
+  --shadow-xs: 0 1px 3px 0px oklch(0.00 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0px oklch(0.00 0 0 / 0.10), 0 1px 2px -1px oklch(0.00 0 0 / 0.10);
+  --shadow: 0 1px 3px 0px oklch(0.00 0 0 / 0.10), 0 1px 2px -1px oklch(0.00 0 0 / 0.10);
+  --shadow-md: 0 1px 3px 0px oklch(0.00 0 0 / 0.10), 0 2px 4px -1px oklch(0.00 0 0 / 0.10);
+  --shadow-lg: 0 1px 3px 0px oklch(0.00 0 0 / 0.10), 0 4px 6px -1px oklch(0.00 0 0 / 0.10);
+  --shadow-xl: 0 1px 3px 0px oklch(0.00 0 0 / 0.10), 0 8px 10px -1px oklch(0.00 0 0 / 0.10);
+  --shadow-2xl: 0 1px 3px 0px oklch(0.00 0 0 / 0.25);
+}
+
+@theme {
+  --breakpoint-lxg: 1120px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-content: var(--content);
+  --color-layout: var(--layout);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+}
+
+foliate-view {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    font-feature-settings: normal;
+    -webkit-tap-highlight-color: transparent;
+    font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+    font-variation-settings: normal;
+  }
+
+  body {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    @apply bg-background text-foreground;
+  }
+
+  .custom-resize-handle {
+    width: 4px;
+    height: 100%;
+    cursor: col-resize;
+    position: absolute;
+    left: 8px;
+    top: 0;
+    background: transparent;
+    z-index: 10;
+    padding: 0 2px;
+  }
+
+  .custom-resize-handle-left {
+    width: 4px;
+    height: 100%;
+    cursor: col-resize;
+    position: absolute;
+    left: 0;
+    top: 0;
+    background: transparent;
+    z-index: 10;
+    padding: 0 2px;
+  }
+
+  .custom-resize-handle::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 100%;
+    background-color: var(--color-gray-500);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .custom-resize-handle:hover::after,
+  .custom-resize-handle:active::after {
+    opacity: 1;
+  }
+
+  .mm-toolbar a {
+    display: inline-flex !important;
+  }
+}
+
+/* 自定义 Typography 间距 - 减少元素间距 */
+@layer utilities {
+  /* 基础 prose 类的间距调整 */
+  .prose {
+    --tw-prose-body: var(--color-foreground);
+    --tw-prose-headings: var(--color-foreground);
+    --tw-prose-links: var(--color-primary);
+    --tw-prose-bold: var(--color-foreground);
+    --tw-prose-code: var(--color-foreground);
+    --tw-prose-pre-code: var(--color-background);
+    --tw-prose-pre-bg: var(--color-muted);
+    --tw-prose-quotes: var(--color-foreground);
+    --tw-prose-quote-borders: var(--color-border);
+    --tw-prose-captions: var(--color-muted-foreground);
+    --tw-prose-th-borders: var(--color-border);
+    --tw-prose-td-borders: var(--color-border);
+
+    max-width: 100% !important;
+  }
+
+  .prose p {
+    margin-top: 0.375em;
+    margin-bottom: 0.375em;
+  }
+
+  .prose h1 {
+    margin-top: 0.5em;
+    margin-bottom: 0.25em;
+  }
+
+  .prose h2 {
+    margin-top: 0.75em;
+    margin-bottom: 0.25em;
+  }
+
+  .prose h3 {
+    margin-top: 0.625em;
+    margin-bottom: 0.25em;
+  }
+
+  .prose h4 {
+    margin-top: 0.5em;
+    margin-bottom: 0.25em;
+  }
+
+  .prose ul,
+  .prose ol {
+    margin-top: 0.375em;
+    margin-bottom: 0.375em;
+    margin-left: 1.25em;
+    padding-left: 0 !important;
+  }
+
+  .prose li {
+    margin-top: 0.0625em;
+    margin-bottom: 0.0625em;
+    padding-left: 0 !important;
+    list-style-type: decimal;
+  }
+
+  .prose blockquote {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .prose pre {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .prose table {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .prose hr {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    background-color: var(--color-neutral-500) !important;
+  }
+
+  /* prose-sm 的更紧凑间距 */
+  .prose-sm p {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+  }
+
+  .prose-sm h1 {
+    margin-top: 0.375em;
+    margin-bottom: 0.1875em;
+  }
+
+  .prose-sm h2 {
+    margin-top: 0.5em;
+    margin-bottom: 0.1875em;
+  }
+
+  .prose-sm h3 {
+    margin-top: 0.4375em;
+    margin-bottom: 0.1875em;
+  }
+
+  .prose-sm h4 {
+    margin-top: 0.375em;
+    margin-bottom: 0.1875em;
+  }
+
+  .prose-sm ul,
+  .prose-sm ol {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+    margin-left: 1.25em;
+    padding-left: 0 !important;
+  }
+
+  .prose-sm li {
+    margin-top: 0.03125em;
+    margin-bottom: 0.03125em;
+    padding-left: 0 !important;
+    list-style-type: decimal;
+  }
+
+  .prose-sm blockquote {
+    margin-top: 0.375em;
+    margin-bottom: 0.375em;
+  }
+
+  .prose-sm pre {
+    margin-top: 0.375em;
+    margin-bottom: 0.375em;
+  }
+
+  .prose-sm table {
+    margin-top: 0.375em;
+    margin-bottom: 0.375em;
+  }
+
+  .prose-sm hr {
+    margin-top: 0.75em;
+    margin-bottom: 0.75em;
+  }
+}
+
+/* Custom shadow effects */
+@layer components {
+  .shadow-around {
+    box-shadow: 
+      0 0 2px 0 rgba(0, 0, 0, 0.01),
+      0 0 1px 0 rgba(0, 0, 0, 0.02),
+      1px 1px 2px 0 rgba(0, 0, 0, 0.03);
+  }
+
+  .dark .shadow-around {
+    box-shadow: 
+      0 0 6px 0 rgba(0, 0, 0, 0.12),
+      0 0 3px 0 rgba(0, 0, 0, 0.10),
+      1px 1px 3px 0 rgba(0, 0, 0, 0.15);
+  }
+}

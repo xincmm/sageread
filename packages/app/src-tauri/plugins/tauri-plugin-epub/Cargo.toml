@@ -1,0 +1,33 @@
+[package]
+name = "tauri-plugin-epub"
+version = "0.1.0"
+authors = ["you"]
+description = "Tauri plugin for EPUB parsing and indexing (scaffold)"
+license = "MIT"
+edition = "2021"
+rust-version = "1.77.2"
+exclude = ["/examples", "/dist-js", "/guest-js", "/node_modules"]
+links = "tauri-plugin-epub"
+
+[dependencies]
+log = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "2.0"
+tauri = { version = "2.5.0", default-features = false, features = [] }
+tokio = { version = "1", features = ["full"] }
+anyhow = "1.0"
+rusqlite = { version = "0.32.1", features = ["bundled"] }
+epub = "2.1.4"
+regex = "1.10"
+tiktoken-rs = "0.7.0"
+reqwest = { version = "0.12.23", features = ["json"] }
+sqlite-vec = "0.1.6"
+serde_json = "1.0"
+uuid = { version = "1.0", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+epub2mdbook = "0.15.0"
+roxmltree = "0.20"
+percent-encoding = "2.3"
+
+[build-dependencies]
+tauri-plugin = { version = "2.3.1", features = ["build"] }

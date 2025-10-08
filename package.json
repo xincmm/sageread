@@ -1,0 +1,21 @@
+{
+  "name": "tauri-app-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "cd packages/app && pnpm tauri dev",
+    "build": "cd packages/app && pnpm build && pnpm tauri build",
+    "preview": "pnpm --filter app preview",
+    "tauri": "cd packages/app && pnpm tauri",
+    "build:foliate": "pnpm --filter foliate-js build",
+    "build:app-tabs": "pnpm --filter app-tabs build"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.3"
+  },
+  "dependencies": {
+    "@biomejs/biome": "1.9.4",
+    "keepalive-for-react": "^4.0.3"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "app-tabs",
+  "version": "0.1.0",
+  "description": "Tab management utilities for the tauri app",
+  "private": true,
+  "type": "module",
+  "main": "src/index.tsx",
+  "types": "src/index.tsx",
+  "exports": {
+    ".": {
+      "types": "./src/index.tsx",
+      "import": "./src/index.tsx"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "draggabilly": "2.2.0",
+    "lodash.isequal": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/draggabilly": "^3.0.0",
+    "@types/lodash.isequal": "^4.5.8",
+    "@types/react": "^19.1.8",
+    "typescript": "~5.8.3"
+  },
+  "peerDependencies": {
+    "react": "^19.1.0"
+  }
+}

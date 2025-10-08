@@ -1,0 +1,89 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+@layer components {
+  .app-btn {
+    /* 1. 定义基础样式 */
+    @apply bg-[#c4e456] text-gray-900 font-semibold py-2 px-4 rounded-lg transition-all duration-300 border border-transparent;
+
+    /* 2. 定义 hover 状态下的样式 */
+    &:hover {
+      @apply bg-[#b8d84a] shadow-md transform scale-105;
+    }
+
+    /* 3. 定义 focus 状态下的样式 (为了可访问性) */
+    &:focus {
+      @apply outline-none ring-2 ring-[#c4e456] ring-offset-2 ring-offset-white;
+    }
+
+    /* 4. 定义 active 状态下的样式 */
+    &:active {
+      @apply bg-[#a8c83e] transform scale-95;
+    }
+
+    /* 5. 定义 disabled 状态下的样式 */
+    &:disabled {
+      @apply bg-gray-300 text-gray-500 cursor-not-allowed transform-none shadow-none;
+    }
+
+    /* 6. 定义暗色主题下的样式 */
+    @variant dark {
+      @apply bg-[#c4e456] text-gray-900 ring-offset-gray-900;
+
+      /* 暗色主题下的 hover 状态 */
+      &:hover {
+        @apply bg-[#d4f466] shadow-lg;
+      }
+
+      /* 暗色主题下的 focus 状态 */
+      &:focus {
+        @apply ring-[#c4e456] ring-offset-gray-900;
+      }
+
+      /* 暗色主题下的 disabled 状态 */
+      &:disabled {
+        @apply bg-gray-600 text-gray-400;
+      }
+    }
+  }
+}

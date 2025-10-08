@@ -1,0 +1,51 @@
+[package]
+name = "tauri-app"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "tauri_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset", "macos-private-api"] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri-plugin-fs = "2"
+tauri-plugin-http = "2"
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+chrono = { version = "0.4.41", features = ["serde"] }
+tokio = { version = "1", features = ["full"] }
+sqlx = "0.8.6"
+uuid = { version = "1", features = ["v4"] }
+log = "0.4"
+tauri-plugin-llamacpp = { path = "plugins/tauri-plugin-llamacpp" }
+tauri-plugin-epub = { path = "plugins/tauri-plugin-epub" }
+jan-utils = { path = "utils" }
+tauri-plugin-log = "2"
+reqwest = { version = "0.12", features = ["stream"] }
+futures-util = "0.3"
+tauri-plugin-os = "2"
+tauri-plugin-shell = "2"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-global-shortcut = "2"
+
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = "symbols"
+panic = "abort"
