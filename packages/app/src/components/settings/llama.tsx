@@ -7,6 +7,7 @@ import { deleteLocalModel, downloadModelFile, getAppDataDir } from "@/services/m
 import { useLlamaStore } from "@/store/llama-store";
 import { listen } from "@tauri-apps/api/event";
 import { ask } from "@tauri-apps/plugin-dialog";
+import { type as getOsType } from "@tauri-apps/plugin-os";
 import { Check, ChevronDown, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -37,6 +38,7 @@ export default function LlamaSettings() {
   const [downloadUrl, setDownloadUrl] = useState("");
   const [customDimension, setCustomDimension] = useState<number>(1024);
   const [appDataDir, setAppDataDir] = useState("");
+  const [isMacOS, setIsMacOS] = useState(false);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
@@ -94,6 +96,11 @@ export default function LlamaSettings() {
       unlistenComplete.then((fn) => fn());
     };
   }, [updateDownloadProgress, setDownloadState, setModelPath]);
+
+  useEffect(() => {
+    const osType = getOsType();
+    setIsMacOS(osType === "macos");
+  }, []);
 
   async function handleDownloadPresetModel(model: PresetModel) {
     if (model.downloaded) {
@@ -279,200 +286,206 @@ export default function LlamaSettings() {
   return (
     <div className="space-y-4 p-4 pt-3 text-neutral-800 dark:text-neutral-100">
       <VectorModelManager />
-      <div className="flex items-center justify-center">
-        <div className="flex-grow border-neutral-300 border-t dark:border-neutral-600" />
-        <span className="mx-4 text-neutral-500 text-sm dark:text-neutral-400">or</span>
-        <div className="flex-grow border-neutral-300 border-t dark:border-neutral-600" />
-      </div>
-      <section className="rounded-lg bg-muted/80 p-4 ">
-        <div className="mb-4 flex items-center justify-between">
-          <h2>Llama.cpp 服务器控制</h2>
-          {currentSession ? (
-            <span className="rounded-md border px-2 py-1 font-medium text-xs">
-              运行中 · PID {currentSession.pid} · 端口 {currentSession.port}
-            </span>
-          ) : null}
-        </div>
+      {isMacOS && (
+        <>
+          <div className="flex items-center justify-center">
+            <div className="flex-grow border-neutral-300 border-t dark:border-neutral-600" />
+            <span className="mx-4 text-neutral-500 text-sm dark:text-neutral-400">or</span>
+            <div className="flex-grow border-neutral-300 border-t dark:border-neutral-600" />
+          </div>
+          <section className="rounded-lg bg-muted/80 p-4 ">
+            <div className="mb-4 flex items-center justify-between">
+              <h2>Llama.cpp 服务器控制</h2>
+              {currentSession ? (
+                <span className="rounded-md border px-2 py-1 font-medium text-xs">
+                  运行中 · PID {currentSession.pid} · 端口 {currentSession.port}
+                </span>
+              ) : null}
+            </div>
 
-        <div className="space-y-4">
-          <div>
-            <div className={labelClass}>向量型下载与管理</div>
-            <div>
-              {embeddingModels.map((model) => {
-                const isDownloaded = model.downloaded === true;
-                const isDownloading = downloadState?.filename === model.filename;
-                const isSelected = modelPath === model.filename;
+            <div className="space-y-4">
+              <div>
+                <div className={labelClass}>向量型下载与管理</div>
+                <div>
+                  {embeddingModels.map((model) => {
+                    const isDownloaded = model.downloaded === true;
+                    const isDownloading = downloadState?.filename === model.filename;
+                    const isSelected = modelPath === model.filename;
 
-                return (
-                  <div key={model.id} className="flex items-start justify-between gap-3 border-b p-3 px-0">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium text-neutral-900 text-sm dark:text-neutral-100">{model.id}</h4>
-                        {isDownloaded && (
-                          <>
-                            <span className="flex items-center gap-1 text-green-700 text-xs dark:text-green-400">
-                              <Check size={12} />
-                              已下载
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={(e) => handleDeleteModel(model.filename, e)}
-                              className="size-5 p-0 text-neutral-500 hover:text-red-600 dark:text-neutral-400 dark:hover:text-red-400"
-                              title="删除模型"
-                            >
-                              <Trash2 className="size-3" />
-                            </Button>
-                          </>
-                        )}
-                        {isDownloading && downloadState && (
-                          <span className="text-blue-600 text-xs dark:text-blue-400">
-                            {downloadState.progress.percent.toFixed(0)}%
-                          </span>
+                    return (
+                      <div key={model.id} className="flex items-start justify-between gap-3 border-b p-3 px-0">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium text-neutral-900 text-sm dark:text-neutral-100">{model.id}</h4>
+                            {isDownloaded && (
+                              <>
+                                <span className="flex items-center gap-1 text-green-700 text-xs dark:text-green-400">
+                                  <Check size={12} />
+                                  已下载
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={(e) => handleDeleteModel(model.filename, e)}
+                                  className="size-5 p-0 text-neutral-500 hover:text-red-600 dark:text-neutral-400 dark:hover:text-red-400"
+                                  title="删除模型"
+                                >
+                                  <Trash2 className="size-3" />
+                                </Button>
+                              </>
+                            )}
+                            {isDownloading && downloadState && (
+                              <span className="text-blue-600 text-xs dark:text-blue-400">
+                                {downloadState.progress.percent.toFixed(0)}%
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-1 text-neutral-600 text-xs dark:text-neutral-400">
+                            {model.description} • {model.size}
+                            {" • "}
+                            {model.recommended && (
+                              <span className="text-neutral-600 text-xs dark:text-neutral-400">
+                                推荐：{model.recommended}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        {isDownloaded ? (
+                          <Switch
+                            checked={isSelected}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setModelPath(model.filename);
+                              } else {
+                                setModelPath("");
+                              }
+                            }}
+                            className="shrink-0"
+                          />
+                        ) : (
+                          <Button
+                            size="xs"
+                            variant="soft"
+                            onClick={() => handleDownloadPresetModel(model)}
+                            disabled={isDownloading || !!downloadState}
+                            className="shrink-0"
+                          >
+                            {isDownloading ? "下载中..." : "下载"}
+                          </Button>
                         )}
                       </div>
-                      <p className="mt-1 text-neutral-600 text-xs dark:text-neutral-400">
-                        {model.description} • {model.size}
-                        {" • "}
-                        {model.recommended && (
-                          <span className="text-neutral-600 text-xs dark:text-neutral-400">
-                            推荐：{model.recommended}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    {isDownloaded ? (
-                      <Switch
-                        checked={isSelected}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setModelPath(model.filename);
-                          } else {
-                            setModelPath("");
-                          }
-                        }}
-                        className="shrink-0"
+                    );
+                  })}
+
+                  <div className="p-3 px-0">
+                    <div
+                      onClick={() => setShowCustomDownload(!showCustomDownload)}
+                      className="flex w-full cursor-pointer items-center justify-between"
+                    >
+                      <span className="text-sm">自定义下载 (高级)</span>
+                      <ChevronDown
+                        className={`size-4 transition-transform ${showCustomDownload ? "rotate-180" : ""}`}
                       />
-                    ) : (
-                      <Button
-                        size="xs"
-                        variant="soft"
-                        onClick={() => handleDownloadPresetModel(model)}
-                        disabled={isDownloading || !!downloadState}
-                        className="shrink-0"
-                      >
-                        {isDownloading ? "下载中..." : "下载"}
-                      </Button>
+                    </div>
+
+                    {showCustomDownload && (
+                      <div className="mt-3 space-y-3">
+                        <div>
+                          <label className={labelClass}>下载链接</label>
+                          <Input
+                            value={downloadUrl}
+                            onChange={(e) => setDownloadUrl(e.target.value)}
+                            placeholder="https://example.com/model.gguf"
+                            className="h-8"
+                            disabled={downloadState?.isDownloading}
+                          />
+                        </div>
+                        <div>
+                          <label className={labelClass}>向量维度</label>
+                          <Select
+                            value={String(customDimension)}
+                            onValueChange={(value) => setCustomDimension(Number(value))}
+                            disabled={downloadState?.isDownloading}
+                          >
+                            <SelectTrigger className="h-8">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="768">768</SelectItem>
+                              <SelectItem value="1024">1024</SelectItem>
+                              <SelectItem value="2048">2048</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setDownloadUrl("");
+                              setShowCustomDownload(false);
+                            }}
+                            disabled={downloadState?.isDownloading}
+                          >
+                            取消
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleDownloadCustomModel}
+                            disabled={!downloadUrl || downloadState?.isDownloading}
+                          >
+                            {downloadState?.isDownloading ? "下载中..." : "下载"}
+                          </Button>
+                        </div>
+                      </div>
                     )}
                   </div>
-                );
-              })}
-
-              <div className="p-3 px-0">
-                <div
-                  onClick={() => setShowCustomDownload(!showCustomDownload)}
-                  className="flex w-full cursor-pointer items-center justify-between"
-                >
-                  <span className="text-sm">自定义下载 (高级)</span>
-                  <ChevronDown className={`size-4 transition-transform ${showCustomDownload ? "rotate-180" : ""}`} />
                 </div>
-
-                {showCustomDownload && (
-                  <div className="mt-3 space-y-3">
-                    <div>
-                      <label className={labelClass}>下载链接</label>
-                      <Input
-                        value={downloadUrl}
-                        onChange={(e) => setDownloadUrl(e.target.value)}
-                        placeholder="https://example.com/model.gguf"
-                        className="h-8"
-                        disabled={downloadState?.isDownloading}
-                      />
-                    </div>
-                    <div>
-                      <label className={labelClass}>向量维度</label>
-                      <Select
-                        value={String(customDimension)}
-                        onValueChange={(value) => setCustomDimension(Number(value))}
-                        disabled={downloadState?.isDownloading}
-                      >
-                        <SelectTrigger className="h-8">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="768">768</SelectItem>
-                          <SelectItem value="1024">1024</SelectItem>
-                          <SelectItem value="2048">2048</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setDownloadUrl("");
-                          setShowCustomDownload(false);
-                        }}
-                        disabled={downloadState?.isDownloading}
-                      >
-                        取消
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={handleDownloadCustomModel}
-                        disabled={!downloadUrl || downloadState?.isDownloading}
-                      >
-                        {downloadState?.isDownloading ? "下载中..." : "下载"}
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                {/* {appDataDir && (
+                  <p className="mt-2 text-neutral-500 text-xs dark:text-neutral-400">
+                    模型目录: {appDataDir}/llamacpp/models
+                  </p>
+                )} */}
               </div>
+
+              <div>
+                <div className={labelClass}>测试文本</div>
+                <Input
+                  type="text"
+                  value={testText}
+                  onChange={(e) => setTestText(e.target.value)}
+                  placeholder="输入要测试的文本…"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={startServer} disabled={currentSession !== null} variant="default" size="xs">
+                  启动
+                </Button>
+                <Button onClick={testEmbedding} disabled={currentSession === null} size="xs">
+                  测试
+                </Button>
+                <Button onClick={stopServer} disabled={currentSession === null} variant="outline" size="xs">
+                  停止
+                </Button>
+              </div>
+
+              <div className="border-b pb-4 text-sm">
+                <strong>状态：</strong> {serverStatus || "等待操作…"}
+              </div>
+
+              {currentSession && (
+                <div className="text-sm">
+                  <div className="mb-2 font-medium">服务器信息</div>
+                  <div>进程 ID: {currentSession.pid}</div>
+                  <div>端口: {currentSession.port}</div>
+                  <div>API 端点: http://127.0.0.1:{currentSession.port}/v1/embeddings</div>
+                </div>
+              )}
             </div>
-            {/* {appDataDir && (
-              <p className="mt-2 text-neutral-500 text-xs dark:text-neutral-400">
-                模型目录: {appDataDir}/llamacpp/models
-              </p>
-            )} */}
-          </div>
-
-          <div>
-            <div className={labelClass}>测试文本</div>
-            <Input
-              type="text"
-              value={testText}
-              onChange={(e) => setTestText(e.target.value)}
-              placeholder="输入要测试的文本…"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={startServer} disabled={currentSession !== null} variant="default" size="xs">
-              启动
-            </Button>
-            <Button onClick={testEmbedding} disabled={currentSession === null} size="xs">
-              测试
-            </Button>
-            <Button onClick={stopServer} disabled={currentSession === null} variant="outline" size="xs">
-              停止
-            </Button>
-          </div>
-
-          <div className="border-b pb-4 text-sm">
-            <strong>状态：</strong> {serverStatus || "等待操作…"}
-          </div>
-
-          {currentSession && (
-            <div className="text-sm">
-              <div className="mb-2 font-medium">服务器信息</div>
-              <div>进程 ID: {currentSession.pid}</div>
-              <div>端口: {currentSession.port}</div>
-              <div>API 端点: http://127.0.0.1:{currentSession.port}/v1/embeddings</div>
-            </div>
-          )}
-        </div>
-      </section>
+          </section>
+        </>
+      )}
     </div>
   );
 }

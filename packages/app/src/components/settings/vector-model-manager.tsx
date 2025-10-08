@@ -4,8 +4,9 @@ import { Switch } from "@/components/ui/switch";
 import { type VectorModelConfig, useLlamaStore } from "@/store/llama-store";
 import { normalizeEmbeddingsUrl } from "@/utils/model";
 import { ask } from "@tauri-apps/plugin-dialog";
+import { type as getOsType } from "@tauri-apps/plugin-os";
 import { Edit2, Plus, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function VectorModelManager() {
@@ -21,6 +22,7 @@ export default function VectorModelManager() {
     setSelectedVectorModelId,
   } = useLlamaStore();
 
+  const [isMacOS, setIsMacOS] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
@@ -33,6 +35,15 @@ export default function VectorModelManager() {
     apiKey: "",
     description: "",
   });
+
+  useEffect(() => {
+    const osType = getOsType();
+    const isMac = osType === "macos";
+    setIsMacOS(isMac);
+    if (!isMac && !vectorModelEnabled) {
+      setVectorModelEnabled(true);
+    }
+  }, [vectorModelEnabled, setVectorModelEnabled]);
 
   const labelClass = "block mb-2 text-sm text-neutral-800 dark:text-neutral-200";
 
@@ -165,15 +176,24 @@ export default function VectorModelManager() {
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className={labelClass}>使用远程向量模型</div>
-            <div className="text-neutral-500 text-xs dark:text-neutral-400">
-              启用后将使用配置的向量模型，而非本地 Llama.cpp 服务
+        {isMacOS && (
+          <div className="flex items-start justify-between">
+            <div>
+              <div className={labelClass}>使用远程向量模型</div>
+              <div className="text-neutral-500 text-xs dark:text-neutral-400">
+                启用后将使用配置的向量模型，而非本地 Llama.cpp 服务
+              </div>
             </div>
+            <Switch checked={vectorModelEnabled} onCheckedChange={setVectorModelEnabled} />
           </div>
-          <Switch checked={vectorModelEnabled} onCheckedChange={setVectorModelEnabled} />
-        </div>
+        )}
+
+        {!isMacOS && (
+          <div className="mb-4">
+            <div className={labelClass}>远程向量模型</div>
+            <div className="text-neutral-500 text-xs dark:text-neutral-400">当前平台仅支持远程向量模型</div>
+          </div>
+        )}
 
         {vectorModelEnabled && (
           <>

@@ -86,7 +86,7 @@ export const useLlamaStore = create<LlamaState>()(
       serverStatus: "",
       currentSession: null,
       modelPath: "",
-      testText: "核心是什么？",
+      testText: "Hello, world!",
       vectorModels: [],
       selectedVectorModelId: null,
       vectorModelEnabled: false,
