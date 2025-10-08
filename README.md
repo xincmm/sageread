@@ -4,14 +4,7 @@
 
 **一款支持 AI 对话的电子书阅读器**
 
-<div style="display: flex; gap:4px; justify-content: center;">
-
-[![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
-
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)](https://github.com/yourusername/sageread)
-
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/yourusername/sageread/pulls)
-</div>
+[![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE) [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-lightgrey)](https://github.com/yourusername/sageread) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/yourusername/sageread/pulls)
 
 </div>
 
@@ -41,14 +34,11 @@ SageRead 是一款电子书阅读器，主要特点是可以在阅读时随时�
 
 ## 🎬 功能展示
 
-### 我的图书
-
 ![Library](./assets/library.png)
 
-
-### AI 增强阅读
-
 ![Chat](./assets/reader-ai-chat.png)
+
+![Chat](./assets/mindmap.png)
 
 ---
 
@@ -58,7 +48,7 @@ SageRead 是一款电子书阅读器，主要特点是可以在阅读时随时�
 
 在设置页面配置你的 AI 服务：
 
-- 打开 **设置 → 模型提供上**
+- 打开 **设置 → 模型提供商**
 - 填写 API Key、Base URL 和模型名称
 - 支持 OpenAI、Anthropic、OpenRouter、DeepSeek 等多种模型
 

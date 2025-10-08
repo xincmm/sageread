@@ -76,7 +76,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
         label: provider.name,
       })),
     },
-    { key: "shortcuts", label: "快捷键" },
+    // { key: "shortcuts", label: "快捷键" },
   ];
 
   const getProviderStatus = (providerId: string) => {

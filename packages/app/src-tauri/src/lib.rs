@@ -84,13 +84,13 @@ pub fn run() {
                     use tauri_plugin_updater::UpdaterExt;
                     match handle.updater() {
                         Ok(updater) => match updater.check().await {
-                            Ok(update) => {
-                                if update.is_update_available() {
-                                    log::info!("Update available: {}", update.version);
-                                    if let Err(e) = update.download_and_install().await {
-                                        log::error!("Failed to install update: {}", e);
-                                    }
+                            Ok(Some(update)) => {
+                                if let Err(e) = update.download_and_install(|_, _| {}, || {}).await {
+                                    log::error!("Failed to install update: {}", e);
                                 }
+                            }
+                            Ok(None) => {
+                                log::info!("No update available");
                             }
                             Err(e) => {
                                 log::error!("Failed to check for updates: {}", e);

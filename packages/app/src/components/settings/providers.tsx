@@ -29,7 +29,7 @@ export default function ProvidersSettings({ onProviderSelect }: ProvidersSetting
       <div className="rounded-lg bg-muted/80 p-4">
         <div className="flex items-center justify-between border-b pb-4">
           <h2 className="text dark:text-neutral-200">模型提供商</h2>
-          <Button size="sm" className="rounded-sm text-xs" onClick={handleAddProvider}>
+          <Button variant="soft" size="sm" onClick={handleAddProvider}>
             <Plus className="h-4 w-4" />
             添加提供商
           </Button>
