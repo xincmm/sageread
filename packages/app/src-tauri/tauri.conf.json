@@ -49,60 +49,44 @@
       "dangerousDisableAssetCspModification": true,
       "csp": {
         "default-src": [
-          "'self'",
-          "ipc://localhost",
-          "blob:"
+          "*"
+        ],
+        "script-src": [
+          "*",
+          "'unsafe-inline'",
+          "'unsafe-eval'"
         ],
         "style-src": [
-          "'self'",
-          "'unsafe-inline'",
-          "blob:"
+          "*",
+          "'unsafe-inline'"
         ],
         "img-src": [
-          "'self'",
-          "asset:",
-          "http://asset.localhost",
+          "*",
           "data:",
-          "https:",
           "blob:"
         ],
         "media-src": [
-          "'self'",
-          "asset:",
+          "*",
           "data:",
-          "blob:",
-          "https:",
-          "http:",
-          "https://*.aliyuncs.com",
-          "http://*.aliyuncs.com"
+          "blob:"
         ],
         "font-src": [
-          "'self'",
-          "asset:",
-          "http://asset.localhost",
+          "*",
           "data:"
         ],
         "connect-src": [
-          "'self'",
-          "ipc://localhost",
-          "http://asset.localhost",
-          "asset:",
-          "https:",
-          "blob:",
-          "http://127.0.0.1:*",
-          "http://localhost:*"
-        ],
-        "script-src": [
-          "'self'",
-          "'unsafe-eval'"
+          "*",
+          "data:",
+          "blob:"
         ],
         "frame-src": [
-          "'self'",
+          "*",
           "data:",
           "blob:"
         ],
         "child-src": [
-          "'self'",
+          "*",
+          "data:",
           "blob:"
         ]
       },
