@@ -217,7 +217,7 @@ function ChatPage() {
   };
 
   return (
-    <div className="relative flex h-full rounded-2xl border bg-background">
+    <div className="relative flex h-full rounded-xl border bg-background">
       <div className={`absolute inset-0 z-50 ${showThreads ? "pointer-events-auto" : "pointer-events-none"}`}>
         <div
           className={`absolute inset-0 transition-opacity duration-300 ${showThreads ? "bg-transparent opacity-100" : "bg-transparent opacity-0"}`}

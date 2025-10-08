@@ -92,7 +92,7 @@ export default function ReaderLayout() {
           draggable={true}
           darkMode={isDarkMode}
           className="h-7"
-          enableDragRegion={isWindows}
+          enableDragRegion={true}
           marginLeft={isWindows ? 0 : 60}
           pinnedLeft={
             <div className="mx-2 flex items-center gap-2" onClick={navigateToHome}>

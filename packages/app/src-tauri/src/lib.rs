@@ -82,17 +82,22 @@ pub fn run() {
                 let handle = app.handle().clone();
                 tauri::async_runtime::spawn(async move {
                     use tauri_plugin_updater::UpdaterExt;
-                    match handle.updater().check().await {
-                        Ok(update) => {
-                            if update.is_update_available() {
-                                log::info!("Update available: {}", update.version);
-                                if let Err(e) = update.download_and_install().await {
-                                    log::error!("Failed to install update: {}", e);
+                    match handle.updater() {
+                        Ok(updater) => match updater.check().await {
+                            Ok(update) => {
+                                if update.is_update_available() {
+                                    log::info!("Update available: {}", update.version);
+                                    if let Err(e) = update.download_and_install().await {
+                                        log::error!("Failed to install update: {}", e);
+                                    }
                                 }
                             }
-                        }
+                            Err(e) => {
+                                log::error!("Failed to check for updates: {}", e);
+                            }
+                        },
                         Err(e) => {
-                            log::error!("Failed to check for updates: {}", e);
+                            log::error!("Failed to get updater: {}", e);
                         }
                     }
                 });
