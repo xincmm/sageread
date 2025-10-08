@@ -56,7 +56,6 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
         with:
           projectPath: './packages/app'
-          packageManager: pnpm
           tagName: ${{ github.ref_name }}
           releaseName: 'SageRead ${{ github.ref_name }}'
           releaseBody: 'See the assets to download and install this version.'

@@ -133,6 +133,7 @@
   },
   "plugins": {
     "updater": {
+      "active": true,
       "endpoints": [
         "https://github.com/xincmm/sageread/releases/latest/download/latest.json"
       ],
