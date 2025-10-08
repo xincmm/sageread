@@ -3,6 +3,35 @@
 version = 4
 
 [[package]]
+name = "SageRead"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "futures-util",
+ "jan-utils",
+ "log",
+ "reqwest 0.12.23",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-epub",
+ "tauri-plugin-fs",
+ "tauri-plugin-global-shortcut",
+ "tauri-plugin-http",
+ "tauri-plugin-llamacpp",
+ "tauri-plugin-log",
+ "tauri-plugin-opener",
+ "tauri-plugin-os",
+ "tauri-plugin-shell",
+ "tauri-plugin-sql",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6041,35 +6070,6 @@ dependencies = [
  "webview2-com",
  "window-vibrancy",
  "windows 0.61.3",
-]
-
-[[package]]
-name = "tauri-app"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "futures-util",
- "jan-utils",
- "log",
- "reqwest 0.12.23",
- "serde",
- "serde_json",
- "sqlx",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-epub",
- "tauri-plugin-fs",
- "tauri-plugin-global-shortcut",
- "tauri-plugin-http",
- "tauri-plugin-llamacpp",
- "tauri-plugin-log",
- "tauri-plugin-opener",
- "tauri-plugin-os",
- "tauri-plugin-shell",
- "tauri-plugin-sql",
- "tokio",
- "uuid",
 ]
 
 [[package]]

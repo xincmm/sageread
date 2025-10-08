@@ -368,10 +368,6 @@ export default function LlamaSettings() {
                 );
               })}
 
-              {embeddingModels.every((m) => !m.downloaded) && !downloadState && (
-                <div className="p-3 text-center text-neutral-500 text-sm">暂无已下载的模型</div>
-              )}
-
               <div className="p-3 px-0">
                 <div
                   onClick={() => setShowCustomDownload(!showCustomDownload)}
@@ -434,11 +430,11 @@ export default function LlamaSettings() {
                 )}
               </div>
             </div>
-            {appDataDir && (
+            {/* {appDataDir && (
               <p className="mt-2 text-neutral-500 text-xs dark:text-neutral-400">
                 模型目录: {appDataDir}/llamacpp/models
               </p>
-            )}
+            )} */}
           </div>
 
           <div>

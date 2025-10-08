@@ -196,7 +196,17 @@
   transition: opacity 0.2s ease;
   pointer-events: auto;
   z-index: 1;
+  background: linear-gradient(to right, transparent 0%, #f3f3ef 30%, #f3f3ef 100%);
+}
+
+.chrome-tabs .chrome-tab[active] .chrome-tab-close {
   background: linear-gradient(to right, transparent 0%, #ffffff 30%, #ffffff 100%);
+}
+
+@media (hover: hover) {
+  .chrome-tabs .chrome-tab:not([active]):hover .chrome-tab-close {
+    background: linear-gradient(to right, transparent 0%, #ffffff 30%, #ffffff 100%);
+  }
 }
 .chrome-tabs .chrome-tab .chrome-tab-close::before {
   content: "";

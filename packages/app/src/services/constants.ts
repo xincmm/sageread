@@ -77,7 +77,7 @@ export const DEFAULT_BOOK_FONT: BookFont = {
   sansSerifFont: "Helvetica",
   monospaceFont: "Consolas",
   defaultFont: "Serif",
-  defaultCJKFont: "LXGW WenKai GB Screen",
+  defaultCJKFont: "ChillHuoFangSong",
   defaultFontSize: 16,
   minimumFontSize: 8,
   fontWeight: 400,
@@ -184,20 +184,13 @@ export const DEFAULT_BOOK_SEARCH_CONFIG: BookSearchConfig = {
 
 export const SYSTEM_SETTINGS_VERSION = 1;
 
-export const SERIF_FONTS = ["Bitter", "Literata", "Merriweather", "Vollkorn", "Georgia", "Times New Roman"];
+export const SERIF_FONTS = ["Georgia", "Times New Roman"];
 
 export const NON_FREE_FONTS = ["Georgia", "Times New Roman"];
 
-export const CJK_SERIF_FONTS = [
-  _("LXGW WenKai GB Screen"),
-  _("LXGW WenKai TC"),
-  _("GuanKiapTsingKhai-T"),
-  _("Source Han Serif CN VF"),
-  _("Huiwen-mincho"),
-  _("KingHwa_OldSong"),
-];
+export const CJK_SERIF_FONTS = [_("ChillHuoFangSong")];
 
-export const CJK_SANS_SERIF_FONTS = ["Noto Sans SC", "Noto Sans TC"];
+export const CJK_SANS_SERIF_FONTS: string[] = [];
 
 // 精选字体列表 - 类似微信读书的简化选择
 export const CURATED_FONTS = [
@@ -208,16 +201,14 @@ export const CURATED_FONTS = [
     serif: "system-ui",
     sansSerif: "system-ui",
     cjk: "system-ui",
-    description: "跟随系统字体设置",
   },
   {
     id: "comfortable",
-    name: "舒适阅读",
-    nameEn: "Comfortable",
+    name: "寒蝉活宋体",
+    nameEn: "ChillHuoFangSong",
     serif: "Georgia",
     sansSerif: "Helvetica",
-    cjk: "LXGW WenKai GB Screen",
-    description: "平衡易读性与美观度",
+    cjk: "ChillHuoFangSong",
   },
   {
     id: "classic",
@@ -226,7 +217,6 @@ export const CURATED_FONTS = [
     serif: "Times New Roman",
     sansSerif: "Arial",
     cjk: "SimSun",
-    description: "传统阅读体验",
   },
   {
     id: "modern",
@@ -235,7 +225,6 @@ export const CURATED_FONTS = [
     serif: "Helvetica",
     sansSerif: "Helvetica",
     cjk: "PingFang SC",
-    description: "简洁现代风格",
   },
   {
     id: "elegant",
@@ -244,16 +233,6 @@ export const CURATED_FONTS = [
     serif: "Georgia",
     sansSerif: "Helvetica",
     cjk: "STKaiti",
-    description: "优雅的手写风格",
-  },
-  {
-    id: "reading",
-    name: "专业宋体",
-    nameEn: "Reading Pro",
-    serif: "Times New Roman",
-    sansSerif: "Arial",
-    cjk: "STSong",
-    description: "长时间阅读优化",
   },
 ];
 
@@ -265,11 +244,11 @@ export const FONT_SIZE_PRESETS = [
   { label: "超大", size: 24 },
 ];
 
-export const SANS_SERIF_FONTS = ["Roboto", "Noto Sans", "Open Sans", "Helvetica"];
+export const SANS_SERIF_FONTS = ["Helvetica", "Arial"];
 
-export const MONOSPACE_FONTS = ["Fira Code", "Lucida Console", "Consolas", "Courier New"];
+export const MONOSPACE_FONTS = ["Consolas", "Courier New"];
 
-export const FALLBACK_FONTS = ["MiSans L3"];
+export const FALLBACK_FONTS: string[] = [];
 
 export const WINDOWS_FONTS = [
   "Arial",
@@ -279,6 +258,7 @@ export const WINDOWS_FONTS = [
   "Cambria",
   "Cambria Math",
   "Candara",
+  "ChillHuoFangSong",
   "Comic Sans MS",
   "Consolas",
   "Constantia",
@@ -299,8 +279,6 @@ export const WINDOWS_FONTS = [
   "Leelawadee UI",
   "Lucida Console",
   "Lucida Sans Unicode",
-  "LXGW WenKai GB Screen",
-  "LXGW WenKai TC",
   "Malgun Gothic",
   "Marlett",
   "Microsoft Himalaya",
@@ -319,7 +297,6 @@ export const WINDOWS_FONTS = [
   "MV Boli",
   "Myanmar Text",
   "Nirmala UI",
-  "Noto Serif JP",
   "NSimSun",
   "Palatino Linotype",
   "PMingLiU",
@@ -367,6 +344,7 @@ export const MACOS_FONTS = [
   "Chalkboard SE",
   "Chalkduster",
   "Charter",
+  "ChillHuoFangSong",
   "Cochin",
   "Comic Sans MS",
   "Copperplate",
@@ -395,14 +373,11 @@ export const MACOS_FONTS = [
   "Kozuka Mincho Pro",
   "Lucida Grande",
   "Luminari",
-  "LXGW WenKai GB Screen",
-  "LXGW WenKai TC",
   "Marker Felt",
   "Menlo",
   "Microsoft Sans Serif",
   "Monaco",
   "Noteworthy",
-  "Noto Serif JP",
   "Optima",
   "Palatino",
   "Papyrus",
@@ -435,6 +410,7 @@ export const MACOS_FONTS = [
 export const LINUX_FONTS = [
   "Arial",
   "Cantarell",
+  "ChillHuoFangSong",
   "Comic Sans MS",
   "Courier New",
   "DejaVu Sans",
@@ -453,8 +429,6 @@ export const LINUX_FONTS = [
   "Liberation Mono",
   "Liberation Sans",
   "Liberation Serif",
-  "LXGW WenKai GB Screen",
-  "LXGW WenKai TC",
   "Noto Mono",
   "Noto Sans",
   "Noto Sans JP",
@@ -464,8 +438,6 @@ export const LINUX_FONTS = [
   "Noto Serif JP",
   "Noto Serif CJK SC",
   "Noto Serif CJK TC",
-  "Open Sans",
-  "Poppins",
   "Sazanami Gothic",
   "Sazanami Mincho",
   "Source Han Sans",
@@ -481,6 +453,7 @@ export const LINUX_FONTS = [
 export const IOS_FONTS = [
   "Avenir",
   "Avenir Next",
+  "ChillHuoFangSong",
   "Courier",
   "Courier New",
   "FangSong",
@@ -491,8 +464,6 @@ export const IOS_FONTS = [
   "Hiragino Mincho",
   "Hiragino Sans",
   "Kaiti",
-  "LXGW WenKai GB Screen",
-  "LXGW WenKai TC",
   "Palatino",
   "PingFang SC",
   "PingFang TC",
@@ -508,6 +479,7 @@ export const IOS_FONTS = [
 
 export const ANDROID_FONTS = [
   "Arial",
+  "ChillHuoFangSong",
   "Droid Sans",
   "Droid Serif",
   "FangSong",
@@ -515,8 +487,6 @@ export const ANDROID_FONTS = [
   "Georgia",
   "Heiti",
   "Kaiti",
-  "LXGW WenKai GB Screen",
-  "LXGW WenKai TC",
   "Noto Sans",
   "Noto Sans CJK",
   "Noto Sans JP",
@@ -575,8 +545,8 @@ export const CJK_FONTS_PATTENS = new RegExp(
     "Batang",
     "Gungsuh",
     "OPPO sans",
-    "MiSans",
-    "Fallback",
+    "ChillHuoFangSong",
+    "Chill",
   ].join("|"),
   "i",
 );

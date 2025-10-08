@@ -56,9 +56,7 @@
         "style-src": [
           "'self'",
           "'unsafe-inline'",
-          "blob:",
-          "https://fonts.googleapis.com",
-          "https://cdn.jsdelivr.net"
+          "blob:"
         ],
         "img-src": [
           "'self'",
@@ -82,9 +80,6 @@
           "'self'",
           "asset:",
           "http://asset.localhost",
-          "https://fonts.gstatic.com",
-          "https://cdn.jsdelivr.net",
-          "https://db.onlinewebfonts.com",
           "data:"
         ],
         "connect-src": [
@@ -131,6 +126,9 @@
     ],
     "externalBin": [
       "binaries/woff2_compress"
+    ],
+    "resources": [
+      "resources/fonts/*"
     ]
   }
 }
