@@ -34,9 +34,9 @@ SageRead 是一款电子书阅读器，主要特点是可以在阅读时随时�
 
 ## 🎬 功能展示
 
-![Library](./assets/library.png)
+![Library](./assets/my-library.png)
 
-![Chat](./assets/reader-ai-chat.png)
+![Chat](./assets/ai-chat.png)
 
 ![Chat](./assets/mindmap.png)
 
