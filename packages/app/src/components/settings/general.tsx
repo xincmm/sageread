@@ -106,9 +106,37 @@ export default function GeneralSettings() {
   return (
     <div className="space-y-8 p-4 pt-3">
       <section className="rounded-lg bg-muted/80 p-4">
-        <h2 className="text mb-4 dark:text-neutral-200">外观</h2>
+        <h2 className="text mb-4 dark:text-neutral-200">关于</h2>
+
         <div className="space-y-4">
           <div className="flex items-center justify-between">
+            <span className="text dark:text-neutral-200">应用版本</span>
+            <p className=" text-neutral-600 text-xs dark:text-neutral-400">v{appVersion}</p>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text dark:text-neutral-200">检查更新</span>
+              <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">检查是否有新版本可用</p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCheckForUpdates}
+              disabled={isCheckingUpdate}
+              className="gap-2"
+            >
+              <RefreshCw className={clsx("size-4", isCheckingUpdate && "animate-spin")} />
+              {isCheckingUpdate ? "检查中..." : "检查更新"}
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg bg-muted/80 p-4">
+        <h2 className="text mb-4 dark:text-neutral-200">外观</h2>
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
             <div>
               <span className="text dark:text-neutral-200">明暗模式</span>
               <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">选择明暗模式偏好</p>
@@ -156,36 +184,6 @@ export default function GeneralSettings() {
               onCheckedChange={(checked) => setSwapSidebars(checked === true)}
               className="data-[state=checked]:border-primary data-[state=checked]:bg-primary"
             />
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-lg bg-muted/80 p-4">
-        <h2 className="text mb-4 dark:text-neutral-200">关于</h2>
-
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text dark:text-neutral-200">应用版本</span>
-              <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">v{appVersion}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text dark:text-neutral-200">检查更新</span>
-              <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">检查是否有新版本可用</p>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleCheckForUpdates}
-              disabled={isCheckingUpdate}
-              className="gap-2"
-            >
-              <RefreshCw className={clsx("size-4", isCheckingUpdate && "animate-spin")} />
-              {isCheckingUpdate ? "检查中..." : "检查更新"}
-            </Button>
           </div>
         </div>
       </section>
