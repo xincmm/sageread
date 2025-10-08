@@ -1,4 +1,3 @@
-import { useTranslation } from "@/hooks/use-translation";
 import { HIGHLIGHT_COLOR_HEX } from "@/services/constants";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import type { BookNote } from "@/types/book";
@@ -17,7 +16,6 @@ import AnnotationPopup from "./annotation-popup";
 import AskAIPopup from "./ask-ai-popup";
 
 const Annotator: React.FC = () => {
-  const _ = useTranslation();
   const { settings } = useAppSettingsStore();
   const store = useReaderStoreApi();
 
@@ -115,9 +113,9 @@ const Annotator: React.FC = () => {
 
   const selectionAnnotated = selection?.annotated;
   const buttons = [
-    { label: _("Copy"), Icon: FiCopy, onClick: handleCopy },
-    { label: _("Explain"), Icon: FiHelpCircle, onClick: handleExplain },
-    { label: _("Ask AI"), Icon: FiMessageCircle, onClick: handleAskAI },
+    { label: "复制", Icon: FiCopy, onClick: handleCopy },
+    { label: "解释", Icon: FiHelpCircle, onClick: handleExplain },
+    { label: "询问AI", Icon: FiMessageCircle, onClick: handleAskAI },
     {
       label: undefined,
       Icon: selectionAnnotated ? RiDeleteBinLine : PiHighlighterFill,

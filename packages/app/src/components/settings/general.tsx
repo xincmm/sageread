@@ -6,7 +6,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useTranslation } from "@/hooks/use-translation";
 import { useThemeStore } from "@/store/theme-store";
 import type { ThemeMode } from "@/styles/themes";
 import { appDataDir } from "@tauri-apps/api/path";
@@ -19,7 +18,6 @@ import { useEffect, useState } from "react";
 export default function GeneralSettings() {
   const [dataPath, setDataPath] = useState("");
   const [isCopied, setIsCopied] = useState(false);
-  const _ = useTranslation();
 
   const {
     themeMode,
@@ -33,13 +31,13 @@ export default function GeneralSettings() {
   } = useThemeStore();
 
   const themeModeOptions = [
-    { value: "auto" as ThemeMode, label: "System" },
-    { value: "light" as ThemeMode, label: "Light" },
-    { value: "dark" as ThemeMode, label: "Dark" },
+    { value: "auto" as ThemeMode, label: "系统" },
+    { value: "light" as ThemeMode, label: "亮色" },
+    { value: "dark" as ThemeMode, label: "暗色" },
   ];
 
   const themeColorOptions = [
-    { value: "default", label: "Default" },
+    { value: "default", label: "默认" },
     { value: "perplexity", label: "Perplexity" },
     { value: "slack", label: "Slack" },
     { value: "corporate", label: "Corporate" },
@@ -89,11 +87,11 @@ export default function GeneralSettings() {
   };
 
   const getCurrentThemeModeLabel = () => {
-    return themeModeOptions.find((option) => option.value === themeMode)?.label || "System";
+    return themeModeOptions.find((option) => option.value === themeMode)?.label || "系统";
   };
 
   const getCurrentThemeColorLabel = () => {
-    return themeColorOptions.find((option) => option.value === themeColor)?.label || "Default";
+    return themeColorOptions.find((option) => option.value === themeColor)?.label || "默认";
   };
 
   return (
@@ -180,12 +178,12 @@ export default function GeneralSettings() {
       </section>
 
       <section className="rounded-lg bg-muted/80 p-4">
-        <h2 className="text mb-4 dark:text-neutral-200">{_("Data Folder")}</h2>
+        <h2 className="text mb-4 dark:text-neutral-200">数据文件夹</h2>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <span className="text-sm dark:text-neutral-200">{_("App Data")}</span>
+              <span className="text-sm dark:text-neutral-200">应用数据</span>
               <div className="mt-2 flex items-center gap-2">
                 <span className="rounded bg-background px-2 py-1 text-sm dark:bg-neutral-700 dark:text-neutral-300">
                   {dataPath}

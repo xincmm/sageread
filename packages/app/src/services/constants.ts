@@ -18,7 +18,8 @@ import { stubTranslation as _ } from "@/utils/misc";
 export const LOCAL_BOOKS_SUBDIR = "Readest/Books";
 export const CLOUD_BOOKS_SUBDIR = "Readest/Books";
 
-export const SUPPORTED_FILE_EXTS = ["epub", "mobi", "azw", "azw3", "fb2", "zip", "cbz", "pdf", "txt"];
+// export const SUPPORTED_FILE_EXTS = ["epub", "mobi", "azw", "azw3", "fb2", "zip", "cbz", "pdf", "txt"];
+export const SUPPORTED_FILE_EXTS = ["epub"];
 export const FILE_ACCEPT_FORMATS = SUPPORTED_FILE_EXTS.map((ext) => `.${ext}`).join(", ");
 export const BOOK_UNGROUPED_NAME = "";
 export const BOOK_UNGROUPED_ID = "";

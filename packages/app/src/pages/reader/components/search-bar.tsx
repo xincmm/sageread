@@ -1,5 +1,4 @@
 import { Input } from "@/components/ui/input";
-import { useTranslation } from "@/hooks/use-translation";
 import type { BookSearchConfig, BookSearchResult } from "@/types/book";
 import { isCJKStr } from "@/utils/lang";
 import { createRejecttFilter } from "@/utils/node";
@@ -26,7 +25,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
   onSearchTermChange,
   onHideSearchBar,
 }) => {
-  const _ = useTranslation();
   const store = useReaderStoreApi();
   const view = store.getState().view;
   const config = store.getState().config;
@@ -95,8 +93,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const handleSearch = useCallback(
     async (term: string) => {
-      const { section } = progress!;
-      const index = searchConfig.scope === "section" ? section.current : undefined;
+      const { pageinfo } = progress!;
+      const index = searchConfig.scope === "section" ? pageinfo.current : undefined;
       const generator = await view?.search({
         ...searchConfig,
         index,
@@ -156,7 +154,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           spellCheck={false}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder={_("Press Enter to search...")}
+          placeholder="按回车键搜索..."
           className="h-8 w-full rounded-full pr-12 pl-10"
         />
       </div>

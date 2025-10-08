@@ -1,7 +1,6 @@
 import SettingsDialog from "@/components/settings/settings-dialog";
 import { useBookUpload } from "@/hooks/use-book-upload";
 import { useSafeAreaInsets } from "@/hooks/use-safe-areaInsets";
-import { useTranslation } from "@/hooks/use-translation";
 import ChatPage from "@/pages/chat";
 import LibraryPage from "@/pages/library";
 import SkillsPage from "@/pages/skills";
@@ -27,7 +26,6 @@ const NotesPage = () => (
 const HomeLayout = () => {
   const { refreshBooks } = useLibraryStore();
   const { isSettingsDialogOpen, toggleSettingsDialog } = useAppSettingsStore();
-  const _ = useTranslation();
   const insets = useSafeAreaInsets();
   const { isDragOver, handleDragOver, handleDragLeave, handleDrop } = useBookUpload();
 
@@ -83,10 +81,8 @@ const HomeLayout = () => {
             <div className="flex flex-col items-center gap-4 rounded-2xl border-2 border-neutral-400 border-dashed bg-white/90 px-30 py-16 shadow-lg dark:border-neutral-500 dark:bg-neutral-800/90">
               <UploadIcon className="h-12 w-12 text-neutral-600 dark:text-neutral-400" />
               <div className="text-center">
-                <h3 className="font-semibold text-lg text-neutral-900 dark:text-neutral-100">
-                  {_("Drop files to upload")}
-                </h3>
-                <p className="text-neutral-600 text-sm dark:text-neutral-400">{_("Release to upload your books")}</p>
+                <h3 className="font-semibold text-lg text-neutral-900 dark:text-neutral-100">拖放文件以上传</h3>
+                <p className="text-neutral-600 text-sm dark:text-neutral-400">松开以上传您的书籍</p>
               </div>
             </div>
           </div>

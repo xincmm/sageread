@@ -4,7 +4,6 @@ import Spinner from "@/components/ui/spinner";
 import { useBookUpload } from "@/hooks/use-book-upload";
 import { useSafeAreaInsets } from "@/hooks/use-safe-areaInsets";
 import { useTheme } from "@/hooks/use-theme";
-import { useTranslation } from "@/hooks/use-translation";
 import { useUICSS } from "@/hooks/use-ui-css";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useLibraryStore } from "@/store/library-store";
@@ -25,7 +24,6 @@ import { useTagsOperations } from "./hooks/use-tags-operations";
 export default function NewLibraryPage() {
   const { searchQuery, booksWithStatus, isLoading, refreshBooks } = useLibraryStore();
   const { isSettingsDialogOpen, toggleSettingsDialog } = useAppSettingsStore();
-  const _ = useTranslation();
   const insets = useSafeAreaInsets();
   const { isDragOver, isUploading, handleDragOver, handleDragLeave, handleDrop, triggerFileSelect } = useBookUpload();
   const navigate = useNavigate();
@@ -109,10 +107,8 @@ export default function NewLibraryPage() {
           <div className="flex flex-col items-center gap-4 rounded-2xl border-2 border-neutral-400 border-dashed bg-white/90 px-30 py-16 shadow-lg dark:border-neutral-500 dark:bg-neutral-800/90">
             <UploadIcon className="h-12 w-12 text-neutral-600 dark:text-neutral-400" />
             <div className="text-center">
-              <h3 className="font-semibold text-lg text-neutral-900 dark:text-neutral-100">
-                {_("Drop files to upload")}
-              </h3>
-              <p className="text-neutral-600 text-sm dark:text-neutral-400">{_("Release to upload your books")}</p>
+              <h3 className="font-semibold text-lg text-neutral-900 dark:text-neutral-100">拖放文件以上传</h3>
+              <p className="text-neutral-600 text-sm dark:text-neutral-400">松开以上传您的书籍</p>
             </div>
           </div>
         </div>
@@ -129,12 +125,12 @@ export default function NewLibraryPage() {
             {isUploading ? (
               <>
                 <div className="h-4 w-4 animate-spin rounded-full border border-white/30 border-t-white" />
-                {_("Uploading...")}
+                上传中...
               </>
             ) : (
               <>
                 <Plus size={16} />
-                {_("Add Book")}
+                添加书籍
               </>
             )}
           </Button>
@@ -151,7 +147,7 @@ export default function NewLibraryPage() {
             <div className="mx-auto">
               {searchQuery.trim() && (
                 <div className="mb-4 text-base-content/70 text-sm">
-                  {_("Found {{count}} book(s) for '{{query}}'", { count: visibleBooks.length, query: searchQuery })}
+                  找到 {visibleBooks.length} 本书籍，搜索词：'{searchQuery}'
                 </div>
               )}
 
@@ -188,10 +184,8 @@ export default function NewLibraryPage() {
           </div>
         ) : hasLibraryBooks && searchQuery.trim() ? (
           <div className="flex flex-1 flex-col items-center justify-center p-8 px-2 text-center">
-            <div className="text-base-content/50 text-lg">
-              {_("No books found for '{{query}}'", { query: searchQuery })}
-            </div>
-            <div className="mt-2 text-base-content/40 text-sm">{_("Try searching with different keywords")}</div>
+            <div className="text-base-content/50 text-lg">没有找到 '{searchQuery}' 相关的书籍</div>
+            <div className="mt-2 text-base-content/40 text-sm">尝试使用不同的关键词搜索</div>
           </div>
         ) : (
           <div className="flex-1 px-2">

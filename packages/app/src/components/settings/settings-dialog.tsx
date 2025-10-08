@@ -1,7 +1,6 @@
 import { Anthropic, DeepSeek, Gemini, Grok, OpenAI, OpenRouter } from "@/components/icons";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 import { useProviderStore } from "@/store/provider-store";
 import { ChevronRight, Server } from "lucide-react";
@@ -63,22 +62,21 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
   const [activeKey, setActiveKey] = useState<SettingsKey>("general");
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(["model-providers"]));
   const { modelProviders } = useProviderStore();
-  const _ = useTranslation();
 
   const settingsItems: SettingsItem[] = [
-    { key: "general", label: _("General") },
+    { key: "general", label: "常规" },
     { key: "font-manager", label: "字体管理" },
     { key: "llama", label: "向量模型" },
     { key: "tts", label: "语音模型" },
     {
       key: "model-providers",
-      label: _("Model Providers"),
+      label: "模型提供商",
       children: modelProviders.map((provider) => ({
         key: `provider-${provider.provider}` as SettingsKey,
         label: provider.name,
       })),
     },
-    { key: "shortcuts", label: _("Shortcuts") },
+    { key: "shortcuts", label: "快捷键" },
   ];
 
   const getProviderStatus = (providerId: string) => {
@@ -187,7 +185,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[80vh] min-h-[80vh] min-w-[800px] max-w-[800px] flex-col gap-0 overflow-y-auto p-0">
         <DialogHeader className="flex-shrink-0 border-neutral-200 border-b px-3 py-4 dark:border-neutral-800 dark:bg-neutral-900">
-          <DialogTitle className="dark:text-neutral-100">{_("Settings")}</DialogTitle>
+          <DialogTitle className="dark:text-neutral-100">设置</DialogTitle>
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 dark:bg-neutral-900">

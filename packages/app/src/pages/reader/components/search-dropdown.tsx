@@ -1,5 +1,4 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useTranslation } from "@/hooks/use-translation";
 import type { BookSearchResult } from "@/types/book";
 import { Search } from "lucide-react";
 import type React from "react";
@@ -13,7 +12,6 @@ interface SearchDropdownProps {
 }
 
 const SearchDropdown: React.FC<SearchDropdownProps> = ({ onNavigate }) => {
-  const _ = useTranslation();
   const store = useReaderStoreApi();
   const view = store.getState().view;
   const bookData = store.getState().bookData;
@@ -90,7 +88,7 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ onNavigate }) => {
       <DropdownMenuTrigger asChild>
         <button
           className="btn btn-ghost flex items-center justify-center rounded-full p-0 outline-none focus:outline-none focus-visible:ring-0"
-          title={_("Search")}
+          title="搜索"
         >
           <Search size={18} />
         </button>
@@ -114,13 +112,11 @@ const SearchDropdown: React.FC<SearchDropdownProps> = ({ onNavigate }) => {
               </div>
             ) : hasSearched && searchResults && searchResults.length === 0 ? (
               <div className="flex h-full items-center justify-center">
-                <div className="p-12 text-center text-muted-foreground text-sm">{_("No search results found")}</div>
+                <div className="p-12 text-center text-muted-foreground text-sm">未找到搜索结果</div>
               </div>
             ) : (
               <div className="flex h-full items-center justify-center">
-                <div className="p-12 text-center text-muted-foreground text-sm">
-                  {_("Enter search terms to find content")}
-                </div>
+                <div className="p-12 text-center text-muted-foreground text-sm">输入搜索词以查找内容</div>
               </div>
             )}
           </div>

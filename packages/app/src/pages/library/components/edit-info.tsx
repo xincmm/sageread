@@ -3,7 +3,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useDownloadImage } from "@/hooks/use-download-image";
-import { useTranslation } from "@/hooks/use-translation";
 import type { BookWithStatusAndUrls } from "@/types/simple-book";
 import { Menu } from "@tauri-apps/api/menu";
 import { LogicalPosition } from "@tauri-apps/api/window";
@@ -25,7 +24,6 @@ interface BookUpdateData {
 }
 
 export default function EditInfo({ book, isOpen, onClose, onSave }: EditInfoProps) {
-  const _ = useTranslation();
   const [title, setTitle] = useState(book.title);
   const [author, setAuthor] = useState(book.author);
   const [coverPath, setCoverPath] = useState<string | null>(null);
@@ -98,7 +96,7 @@ export default function EditInfo({ book, isOpen, onClose, onSave }: EditInfoProp
           items: [
             {
               id: "download-image",
-              text: _("Download Image"),
+              text: "下载图片",
               action: () => {
                 handleImageDownload(imageUrl);
               },
@@ -111,7 +109,7 @@ export default function EditInfo({ book, isOpen, onClose, onSave }: EditInfoProp
         console.error("Failed to show image context menu:", error);
       }
     },
-    [_, handleImageDownload],
+    [handleImageDownload],
   );
 
   const handleSave = useCallback(async () => {
@@ -166,12 +164,12 @@ export default function EditInfo({ book, isOpen, onClose, onSave }: EditInfoProp
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{_("Edit Book Info")}</DialogTitle>
+          <DialogTitle>编辑书籍信息</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-5 p-4">
           <div className="space-y-2">
-            <Label>{_("Cover Image")}</Label>
+            <Label>封面图片</Label>
             <div className="flex items-start space-x-4">
               <div className="flex-shrink-0">
                 <div className="relative overflow-hidden">
@@ -206,34 +204,32 @@ export default function EditInfo({ book, isOpen, onClose, onSave }: EditInfoProp
               <div className="flex-1 space-y-2">
                 <Button variant="outline" size="sm" onClick={handleCoverUpload} className="w-full">
                   <Upload className="h-4 w-4" />
-                  {getCurrentCover() ? _("Change Cover") : _("Upload Cover")}
+                  {getCurrentCover() ? "更换封面" : "上传封面"}
                 </Button>
-                <p className="text-neutral-500 text-xs dark:text-neutral-400">
-                  {_("Supported formats: PNG, JPG, GIF, WebP")}
-                </p>
+                <p className="text-neutral-500 text-xs dark:text-neutral-400">支持格式：PNG、JPG、GIF、WebP</p>
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="title">{_("Title")}</Label>
+            <Label htmlFor="title">书名</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder={_("Enter book title")}
+              placeholder="请输入书名"
               maxLength={256}
               className={`w-full ${!validation.isTitleValid ? "border-red-500 focus:border-red-500" : ""}`}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="author">{_("Author")}</Label>
+            <Label htmlFor="author">作者</Label>
             <Input
               id="author"
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
-              placeholder={_("Enter author name")}
+              placeholder="请输入作者姓名"
               className={`w-full ${!validation.isAuthorValid ? "border-red-500 focus:border-red-500" : ""}`}
               maxLength={256}
             />
@@ -242,10 +238,10 @@ export default function EditInfo({ book, isOpen, onClose, onSave }: EditInfoProp
 
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
-            {_("Cancel")}
+            取消
           </Button>
           <Button onClick={handleSave} disabled={isLoading || !validation.isFormValid}>
-            {isLoading ? _("Saving...") : _("Save Changes")}
+            {isLoading ? "保存中..." : "保存更改"}
           </Button>
         </DialogFooter>
       </DialogContent>

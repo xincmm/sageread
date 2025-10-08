@@ -1,5 +1,4 @@
 import { Input } from "@/components/ui/input";
-import { useTranslation } from "@/hooks/use-translation";
 import { Search } from "lucide-react";
 
 interface SearchToggleProps {
@@ -8,8 +7,6 @@ interface SearchToggleProps {
 }
 
 export default function SearchToggle({ searchQuery, onSearchChange }: SearchToggleProps) {
-  const _ = useTranslation();
-
   return (
     <div className="relative">
       <Search
@@ -18,7 +15,7 @@ export default function SearchToggle({ searchQuery, onSearchChange }: SearchTogg
       />
       <Input
         type="text"
-        placeholder={_("Search")}
+        placeholder="搜索"
         value={searchQuery}
         onChange={onSearchChange}
         className="h-8 w-full rounded-full border bg-muted pr-4 pl-8 shadow-none foucs:outline-none placeholder:font-light placeholder:text-neutral-500 focus-visible:ring-0 dark:text-neutral-200 dark:placeholder:text-neutral-400"

@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "@/hooks/use-translation";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAutoHideControls } from "../hooks/use-auto-hide-controls";
@@ -7,7 +6,6 @@ import { viewPagination } from "../hooks/use-pagination";
 import { useReaderStore, useReaderStoreApi } from "./reader-provider";
 
 const FooterBar = () => {
-  const _ = useTranslation();
   const store = useReaderStoreApi();
   const progress = useReaderStore((state) => state.progress);
   const { settings } = useAppSettingsStore();
@@ -45,10 +43,9 @@ const FooterBar = () => {
 
   const pageInfo =
     pageinfo && pageinfo.current >= 0 && pageinfo.total > 0
-      ? _(isVertical ? "{{currentPage}} · {{totalPage}}" : "Loc. {{currentPage}} / {{totalPage}}", {
-          currentPage: pageinfo.current + 1,
-          totalPage: pageinfo.total,
-        })
+      ? isVertical
+        ? `${pageinfo.current + 1} · ${pageinfo.total}`
+        : `第 ${pageinfo.current + 1} / ${pageinfo.total} 页`
       : "";
 
   return (
@@ -63,7 +60,7 @@ const FooterBar = () => {
           size="icon"
           className={`size-7 rounded-full transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0"}`}
           onClick={handleGoPrevPage}
-          title={isScrolledMode ? _("Previous Chapter") : _("Previous Page")}
+          title={isScrolledMode ? "上一章" : "上一页"}
         >
           <ChevronLeft className="size-5" />
         </Button>
@@ -77,7 +74,7 @@ const FooterBar = () => {
           size="icon"
           className={`size-7 rounded-full transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0"}`}
           onClick={handleGoNextPage}
-          title={isScrolledMode ? _("Next Chapter") : _("Next Page")}
+          title={isScrolledMode ? "下一章" : "下一页"}
         >
           <ChevronRight className="size-5" />
         </Button>

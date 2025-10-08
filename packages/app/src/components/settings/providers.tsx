@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 import { useProviderStore } from "@/store/provider-store";
 import { Plus, Settings } from "lucide-react";
@@ -12,7 +11,6 @@ interface ProvidersSettingsProps {
 
 export default function ProvidersSettings({ onProviderSelect }: ProvidersSettingsProps) {
   const { modelProviders, setModelProviders, addProvider } = useProviderStore();
-  const _ = useTranslation();
 
   const toggleProviderEnabled = (providerId: string) => {
     const updatedProviders = modelProviders.map((provider) =>
@@ -30,10 +28,10 @@ export default function ProvidersSettings({ onProviderSelect }: ProvidersSetting
     <div className="p-4 pt-3">
       <div className="rounded-lg bg-muted/80 p-4">
         <div className="flex items-center justify-between border-b pb-4">
-          <h2 className="text dark:text-neutral-200">{_("Model Providers")}</h2>
+          <h2 className="text dark:text-neutral-200">模型提供商</h2>
           <Button size="sm" className="rounded-sm text-xs" onClick={handleAddProvider}>
             <Plus className="h-4 w-4" />
-            {_("Add Provider")}
+            添加提供商
           </Button>
         </div>
 
@@ -50,7 +48,7 @@ export default function ProvidersSettings({ onProviderSelect }: ProvidersSetting
                     <div>
                       <span className="text-sm dark:text-neutral-200">{providerName}</span>
                       <p className="text-gray-600 text-xs dark:text-neutral-400">
-                        {modelCount === 1 ? _("Model") : _("{{count}} Models", { count: modelCount })}
+                        {modelCount === 1 ? "个模型" : `${modelCount} 个模型`}
                       </p>
                     </div>
                   </div>

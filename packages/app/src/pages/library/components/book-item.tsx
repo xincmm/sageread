@@ -1,7 +1,6 @@
 import AITagConfirmDialog from "@/components/ai/tag-confirm-dialog";
 import { useDownloadImage } from "@/hooks/use-download-image";
 import { useModelSelector } from "@/hooks/use-model-selector";
-import { useTranslation } from "@/hooks/use-translation";
 import type { BookTag } from "@/pages/library/hooks/use-tags-management";
 import { type AITagSuggestion, generateTagsWithAI } from "@/services/ai-tag-service";
 import { updateBookVectorizationMeta } from "@/services/book-service";
@@ -38,7 +37,6 @@ interface BookItemProps {
 }
 
 export default function BookItem({ book, availableTags = [], onDelete, onUpdate, onRefresh }: BookItemProps) {
-  const _ = useTranslation();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const { downloadImage } = useDownloadImage();
 
@@ -165,8 +163,8 @@ export default function BookItem({ book, availableTags = [], onDelete, onUpdate,
   const handleNativeDelete = useCallback(async () => {
     if (onDelete) {
       try {
-        const confirmed = await ask(`${book.title}\n\n${_("This action cannot be undone.")}`, {
-          title: _("Confirm Deletion"),
+        const confirmed = await ask(`${book.title}\n\n此操作无法撤销。`, {
+          title: "确认删除",
           kind: "warning",
         });
 
@@ -177,7 +175,7 @@ export default function BookItem({ book, availableTags = [], onDelete, onUpdate,
         console.error("Failed to show delete dialog:", error);
       }
     }
-  }, [_, onDelete, book]);
+  }, [onDelete, book]);
 
   const handleDownloadImage = useCallback(async () => {
     if (!book.coverUrl) {
@@ -358,7 +356,7 @@ export default function BookItem({ book, availableTags = [], onDelete, onUpdate,
         const isUnread = !book.status || book.status.status === "unread";
         const markStatusItem = {
           id: isUnread ? "mark-read" : "mark-unread",
-          text: isUnread ? _("Mark as Read") : _("Mark as Unread"),
+          text: isUnread ? "标记为已读" : "标记为未读",
           action: () => {
             if (isUnread) {
               console.log("Mark as Read clicked");
@@ -470,7 +468,7 @@ export default function BookItem({ book, availableTags = [], onDelete, onUpdate,
           items: [
             {
               id: "open",
-              text: _("Open"),
+              text: "打开",
               action: () => {
                 handleClick();
               },
@@ -479,7 +477,7 @@ export default function BookItem({ book, availableTags = [], onDelete, onUpdate,
             separator1,
             {
               id: "edit",
-              text: _("Edit Info"),
+              text: "编辑信息",
               action: () => {
                 setShowEditDialog(true);
               },
@@ -488,7 +486,7 @@ export default function BookItem({ book, availableTags = [], onDelete, onUpdate,
               ? [
                   {
                     id: "download-image",
-                    text: _("Download Image"),
+                    text: "下载图片",
                     action: () => {
                       handleDownloadImage();
                     },
@@ -501,7 +499,7 @@ export default function BookItem({ book, availableTags = [], onDelete, onUpdate,
             separator3,
             {
               id: "delete",
-              text: _("Delete"),
+              text: "删除",
               action: () => {
                 handleNativeDelete();
               },
@@ -515,7 +513,6 @@ export default function BookItem({ book, availableTags = [], onDelete, onUpdate,
       }
     },
     [
-      _,
       handleClick,
       handleNativeDelete,
       handleDownloadImage,

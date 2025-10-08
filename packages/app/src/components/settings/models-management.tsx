@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 import { Plus, RefreshCcw, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -36,7 +35,6 @@ export default function ModelsManagement({
   const [filters, setFilters] = useState<ModelFilterOptions>({
     searchTerm: "",
   });
-  const _ = useTranslation();
 
   const filteredModels = useMemo(() => {
     if (!provider?.models) return [];
@@ -97,7 +95,7 @@ export default function ModelsManagement({
   return (
     <div className="space-y-4 rounded-lg bg-muted/80 p-4 pt-3">
       <div className="flex items-center justify-between">
-        <h3 className="font-medium text-sm dark:text-neutral-200">{_("Models")}</h3>
+        <h3 className="font-medium text-sm dark:text-neutral-200">模型</h3>
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -111,7 +109,7 @@ export default function ModelsManagement({
                 <RefreshCcw className={`size-3 ${isRefreshing ? "animate-spin" : ""}`} />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>{isRefreshing ? _("Refreshing...") : _("Refresh")}</TooltipContent>
+            <TooltipContent>{isRefreshing ? "刷新中..." : "刷新"}</TooltipContent>
           </Tooltip>
           {provider?.models && provider.models.length > 0 && (
             <Tooltip>
@@ -120,7 +118,7 @@ export default function ModelsManagement({
                   <X className="size-3" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{_("Clear All")}</TooltipContent>
+              <TooltipContent>清空全部</TooltipContent>
             </Tooltip>
           )}
           <Tooltip>
@@ -136,7 +134,7 @@ export default function ModelsManagement({
 
       {refreshError && (
         <div className="rounded-md bg-red-50 p-3 text-red-700 text-xs dark:bg-red-900/20 dark:text-red-200">
-          <strong>{_("Error:")}</strong> {refreshError}
+          <strong>错误：</strong> {refreshError}
         </div>
       )}
 
@@ -144,15 +142,15 @@ export default function ModelsManagement({
         <div className="rounded-md bg-red-100 p-3 text-xs dark:bg-red-900/30 dark:text-red-100">
           <div className="flex items-center justify-between">
             <div>
-              <strong>{_("Confirm Clear All Models")}</strong>
-              <p className="mt-1">{_("This will permanently delete all models. This action cannot be undone.")}</p>
+              <strong>确认清空所有模型</strong>
+              <p className="mt-1">这将永久删除所有模型。此操作无法撤销。</p>
             </div>
             <div className="flex gap-2">
               <Button size="sm" onClick={handleClearAllModels} variant="destructive" className="h-6 text-xs">
-                {_("Delete All")}
+                删除全部
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setShowClearConfirm(false)} className="h-6 text-xs">
-                {_("Cancel")}
+                取消
               </Button>
             </div>
           </div>
@@ -171,13 +169,13 @@ export default function ModelsManagement({
       {editingModelId && (
         <div className="space-y-3 rounded-md border p-2 py-4">
           <div className="flex items-center justify-between">
-            <span className="font-medium text-sm dark:text-neutral-200">{_("Add New Model")}</span>
+            <span className="font-medium text-sm dark:text-neutral-200">添加新模型</span>
             <div className="flex gap-2">
               <Button size="sm" onClick={saveNewModel} disabled={!newModelData.id.trim()} className="h-6 text-xs">
-                {_("Save")}
+                保存
               </Button>
               <Button size="sm" variant="ghost" onClick={cancelNewModel} className="h-6 text-xs">
-                {_("Cancel")}
+                取消
               </Button>
             </div>
           </div>
@@ -185,7 +183,7 @@ export default function ModelsManagement({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-xs">
-                {_("Model ID")} <span className="text-red-500">*</span>
+                模型ID <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={newModelData.id}
@@ -195,7 +193,7 @@ export default function ModelsManagement({
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">{_("Display Name")}</Label>
+              <Label className="text-xs">显示名称</Label>
               <Input
                 value={newModelData.name}
                 onChange={(e) => setNewModelData((prev) => ({ ...prev, name: e.target.value }))}
@@ -226,7 +224,7 @@ export default function ModelsManagement({
                   <span className="font-medium text-sm dark:text-neutral-200">{model.id}</span>
                   {model.manual && (
                     <span className="rounded bg-neutral-200 px-1 py-0.5 text-neutral-700 text-xs dark:bg-neutral-700 dark:text-neutral-300">
-                      {_("Manual")}
+                      手动
                     </span>
                   )}
                 </div>
@@ -249,8 +247,8 @@ export default function ModelsManagement({
         {(!provider?.models || filteredModels.length === 0) && !editingModelId && (
           <div className="py-8 text-center text-neutral-500 text-sm dark:text-neutral-200">
             {!provider?.models || provider.models.length === 0
-              ? _('No models configured. Click "Add Model" to get started.')
-              : _("No models match the current filters.")}
+              ? '未配置模型。点击"添加模型"开始。'
+              : "没有模型匹配当前筛选条件。"}
           </div>
         )}
       </div>

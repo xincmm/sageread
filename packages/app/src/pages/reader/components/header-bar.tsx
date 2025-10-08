@@ -1,5 +1,4 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useTranslation } from "@/hooks/use-translation";
 import { useLayoutStore } from "@/store/layout-store";
 import { useThemeStore } from "@/store/theme-store";
 import { SessionState } from "@/types/reading-session";
@@ -18,7 +17,6 @@ import SettingsDropdown from "./settings-dropdown";
 import TOCView from "./toc-view";
 
 const HeaderBar = () => {
-  const _ = useTranslation();
   const headerRef = useRef<HTMLDivElement>(null);
   const [displayTime, setDisplayTime] = useState(0);
 
@@ -149,7 +147,7 @@ const HeaderBar = () => {
                   />
                 </div>
               ) : (
-                <div className="p-4 text-center text-muted-foreground">{_("No table of contents available")}</div>
+                <div className="p-4 text-center text-muted-foreground">没有可用的目录</div>
               )}
             </DropdownMenuContent>
           </DropdownMenu>

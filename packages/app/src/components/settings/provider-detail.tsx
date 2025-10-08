@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { useTranslation } from "@/hooks/use-translation";
 import { fetchModelsFromProvider } from "@/services/provider-service";
 import { useProviderStore } from "@/store/provider-store";
 import { throttle } from "@/utils/throttle";
@@ -25,7 +24,6 @@ export default function ProviderDetailSettings({ providerId, onBack }: ProviderD
   const [isHoveringName, setIsHoveringName] = useState(false);
   const [localName, setLocalName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const _ = useTranslation();
 
   const provider = modelProviders.find((p) => p.provider === providerId);
   const isCustomProvider = providerId.startsWith("custom-");
@@ -101,7 +99,7 @@ export default function ProviderDetailSettings({ providerId, onBack }: ProviderD
 
   const handleRefreshModels = async () => {
     if (!provider || !provider.baseUrl) {
-      setRefreshError(_("Please configure the base URL first"));
+      setRefreshError("请先配置基础URL");
       return;
     }
 
@@ -160,7 +158,7 @@ export default function ProviderDetailSettings({ providerId, onBack }: ProviderD
   if (!provider) {
     return (
       <div className="p-4">
-        <div className="text-center text-gray-500 dark:text-neutral-400">{_("Provider not found")}</div>
+        <div className="text-center text-gray-500 dark:text-neutral-400">未找到提供商</div>
       </div>
     );
   }

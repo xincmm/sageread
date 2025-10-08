@@ -1,6 +1,5 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useTranslation } from "@/hooks/use-translation";
 import { CURATED_FONTS, DEFAULT_BOOK_FONT } from "@/services/constants";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useFontStore } from "@/store/font-store";
@@ -20,7 +19,6 @@ const FONT_SIZE_MAX = 32;
 const FONT_SIZE_STEP = 2;
 
 const SettingsDropdown = () => {
-  const _ = useTranslation();
   const store = useReaderStoreApi();
   const { themeMode, setThemeMode } = useThemeStore();
   const { settings, setSettings } = useAppSettingsStore();
@@ -175,7 +173,7 @@ const SettingsDropdown = () => {
       <DropdownMenuTrigger asChild>
         <button
           className="btn btn-ghost flex h-8 min-h-8 w-8 items-center justify-center rounded-full p-0 outline-none focus:outline-none focus-visible:ring-0"
-          title={_("Font Size Settings")}
+          title="字体大小设置"
         >
           <Settings2 size={18} />
         </button>
@@ -183,7 +181,7 @@ const SettingsDropdown = () => {
       <DropdownMenuContent className="w-80 p-3" align="end" side="bottom" sideOffset={4}>
         <div className="space-y-4">
           <div>
-            <div className="mb-3 font-medium text-sm">{_("Font Family")}</div>
+            <div className="mb-3 font-medium text-sm">字体系列</div>
             {(() => {
               const selected = allFonts.find((f) => f.id === currentFontId);
               const triggerFontFamily = selected ? (isCJK ? selected.cjk : selected.serif) : undefined;
@@ -194,7 +192,7 @@ const SettingsDropdown = () => {
                     className="h-8 w-full focus:outline-none focus:ring-0"
                     style={{ fontFamily: triggerFontFamily, fontWeight: triggerFontWeight }}
                   >
-                    <SelectValue placeholder={_("Select Font")} />
+                    <SelectValue placeholder="选择字体" />
                   </SelectTrigger>
                   <SelectContent className="w-full dark:border-neutral-700 dark:bg-neutral-800">
                     {allFonts.map((font) => (
@@ -217,13 +215,13 @@ const SettingsDropdown = () => {
           </div>
 
           <div>
-            <div className="mb-3 font-medium text-sm">{_("Font Size")}</div>
+            <div className="mb-3 font-medium text-sm">字体大小</div>
             <div className="flex items-center justify-center gap-4">
               <button
                 className="btn btn-sm size-8 cursor-pointer rounded-md border bg-muted hover:bg-muted/70 disabled:bg-muted disabled:opacity-50"
                 onClick={handleDecrease}
                 disabled={globalViewSettings.defaultFontSize <= FONT_SIZE_MIN}
-                title={_("Decrease font size")}
+                title="减小字体大小"
               >
                 <span className="flex items-center justify-center text-xs">A</span>
               </button>
@@ -241,7 +239,7 @@ const SettingsDropdown = () => {
                 className="btn btn-sm size-8 cursor-pointer rounded-md border bg-muted hover:bg-muted/70 disabled:bg-muted disabled:opacity-50"
                 onClick={handleIncrease}
                 disabled={globalViewSettings.defaultFontSize >= FONT_SIZE_MAX}
-                title={_("Increase font size")}
+                title="增大字体大小"
               >
                 <span className="flex items-center justify-center text-lg">A</span>
               </button>
@@ -249,7 +247,7 @@ const SettingsDropdown = () => {
           </div>
 
           <div>
-            <div className="mb-3 font-medium text-sm">{_("Reading Mode")}</div>
+            <div className="mb-3 font-medium text-sm">阅读模式</div>
             <div className="space-y-3">
               <div className="flex items-center gap-4">
                 <button
@@ -259,9 +257,9 @@ const SettingsDropdown = () => {
                       : "border bg-muted text-primary hover:bg-muted/70"
                   }`}
                   onClick={() => applyScrolledMode(true)}
-                  title={_("Scrolled Mode")}
+                  title="滚动模式"
                 >
-                  <span className="text-sm">{_("Scrolled")}</span>
+                  <span className="text-sm">滚动</span>
                   {globalViewSettings.scrolled && <MdCheck size={16} />}
                 </button>
                 <button
@@ -271,9 +269,9 @@ const SettingsDropdown = () => {
                       : "border bg-muted text-primary hover:bg-muted/70"
                   }`}
                   onClick={() => applyScrolledMode(false)}
-                  title={_("Paginated Mode")}
+                  title="分页模式"
                 >
-                  <span className="text-sm">{_("Paginated")}</span>
+                  <span className="text-sm">分页</span>
                   {!globalViewSettings.scrolled && <MdCheck size={16} />}
                 </button>
               </div>
@@ -281,7 +279,7 @@ const SettingsDropdown = () => {
           </div>
 
           <div>
-            <div className="mb-3 font-medium text-sm">{_("Theme Mode")}</div>
+            <div className="mb-3 font-medium text-sm">主题模式</div>
             <div className="flex items-center gap-4">
               <button
                 className={`btn btn-sm flex size-8 items-center justify-center rounded-md ${
@@ -290,7 +288,7 @@ const SettingsDropdown = () => {
                     : "border bg-muted text-primary hover:bg-muted/70"
                 }`}
                 onClick={() => setThemeMode("auto")}
-                title={_("Auto Mode")}
+                title="自动模式"
               >
                 <TbSunMoon size={16} />
               </button>
@@ -301,7 +299,7 @@ const SettingsDropdown = () => {
                     : "bg-muted text-primary hover:bg-muted/70"
                 }`}
                 onClick={() => setThemeMode("light")}
-                title={_("Light Mode")}
+                title="浅色模式"
               >
                 <MdOutlineLightMode size={16} />
               </button>
@@ -312,7 +310,7 @@ const SettingsDropdown = () => {
                     : "bg-muted text-primary hover:bg-muted/70"
                 }`}
                 onClick={() => setThemeMode("dark")}
-                title={_("Dark Mode")}
+                title="深色模式"
               >
                 <MdOutlineDarkMode size={16} />
               </button>

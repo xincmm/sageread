@@ -2,7 +2,6 @@ import type React from "react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
-import { useTranslation } from "@/hooks/use-translation";
 import { uploadBook } from "@/services/book-service";
 import { FILE_ACCEPT_FORMATS } from "@/services/constants";
 import { useLibraryStore } from "@/store/library-store";
@@ -13,7 +12,6 @@ export function useBookUpload() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const { refreshBooks } = useLibraryStore();
-  const _ = useTranslation();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -33,29 +31,24 @@ export function useBookUpload() {
     handleDropedFiles(files);
   }, []);
 
-  const handleDropedFiles = useCallback(
-    async (files: File[]) => {
-      if (files.length === 0) return;
+  const handleDropedFiles = useCallback(async (files: File[]) => {
+    if (files.length === 0) return;
 
-      const supportedFiles = files.filter((file) => {
-        const fileExt = file.name.split(".").pop()?.toLowerCase();
-        return FILE_ACCEPT_FORMATS.includes(`.${fileExt}`);
+    const supportedFiles = files.filter((file) => {
+      const fileExt = file.name.split(".").pop()?.toLowerCase();
+      return FILE_ACCEPT_FORMATS.includes(`.${fileExt}`);
+    });
+
+    if (supportedFiles.length === 0) {
+      eventDispatcher.dispatch("toast", {
+        message: `未找到支持的文件。支持的格式：${FILE_ACCEPT_FORMATS}`,
+        type: "error",
       });
+      return;
+    }
 
-      if (supportedFiles.length === 0) {
-        eventDispatcher.dispatch("toast", {
-          message: _("No supported files found. Supported formats: {{formats}}", {
-            formats: FILE_ACCEPT_FORMATS,
-          }),
-          type: "error",
-        });
-        return;
-      }
-
-      await importBooks(supportedFiles);
-    },
-    [_],
-  );
+    await importBooks(supportedFiles);
+  }, []);
 
   const importBooks = useCallback(
     async (files: File[]) => {
@@ -75,23 +68,19 @@ export function useBookUpload() {
 
       setIsUploading(false);
 
-      // Show error message for failed imports
       if (failedFiles.length > 0) {
         eventDispatcher.dispatch("toast", {
-          message: _("Failed to import book(s): {{filenames}}", {
-            filenames: listFormater(false).format(failedFiles),
-          }),
+          message: `导入书籍失败：${listFormater(false).format(failedFiles)}`,
           type: "error",
         });
       }
 
-      // Show success message for successfully imported books
       if (successBooks.length > 0) {
-        toast.success(_("Successfully imported {{count}} book(s)", { count: successBooks.length }));
+        toast.success(`成功导入 ${successBooks.length} 本书籍`);
         await refreshBooks();
       }
     },
-    [_, refreshBooks],
+    [refreshBooks],
   );
 
   const selectFiles = useCallback((): Promise<FileList | null> => {

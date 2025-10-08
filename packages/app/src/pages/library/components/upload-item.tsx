@@ -1,14 +1,12 @@
 import { Plus } from "lucide-react";
 
 import { useBookUpload } from "@/hooks/use-book-upload";
-import { useTranslation } from "@/hooks/use-translation";
 
 interface UploadItemProps {
   viewMode?: "grid" | "list";
 }
 
 export default function UploadItem({ viewMode = "grid" }: UploadItemProps) {
-  const _ = useTranslation();
   const { isDragOver, isUploading, handleDragOver, handleDragLeave, handleDrop, triggerFileSelect } = useBookUpload();
 
   return (
@@ -40,9 +38,7 @@ export default function UploadItem({ viewMode = "grid" }: UploadItemProps) {
               <Plus className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
             )}
           </div>
-          <p className="text-neutral-600 text-xs dark:text-neutral-400">
-            {isUploading ? _("Uploading...") : _("Add Book")}
-          </p>
+          <p className="text-neutral-600 text-xs dark:text-neutral-400">{isUploading ? "上传中..." : "添加书籍"}</p>
         </div>
       </div>
     </div>

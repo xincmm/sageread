@@ -1,11 +1,9 @@
-import { useTranslation } from "@/hooks/use-translation";
 import clsx from "clsx";
 import type React from "react";
 
 const Spinner: React.FC<{
   loading: boolean;
 }> = ({ loading }) => {
-  const _ = useTranslation();
   if (!loading) return null;
 
   return (
@@ -17,7 +15,7 @@ const Spinner: React.FC<{
       role="status"
     >
       <span className="loading loading-dots loading-lg" />
-      <span className="hidden">{_("Loading...")}</span>
+      <span className="hidden">加载中...</span>
     </div>
   );
 };
