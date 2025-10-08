@@ -8,16 +8,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useThemeStore } from "@/store/theme-store";
 import type { ThemeMode } from "@/styles/themes";
+import { getVersion } from "@tauri-apps/api/app";
 import { appDataDir } from "@tauri-apps/api/path";
 import { exists, mkdir } from "@tauri-apps/plugin-fs";
 import { openPath } from "@tauri-apps/plugin-opener";
+import { check } from "@tauri-apps/plugin-updater";
 import clsx from "clsx";
-import { Check, ChevronDownIcon, Copy, FolderOpen } from "lucide-react";
+import { Check, ChevronDownIcon, Copy, FolderOpen, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function GeneralSettings() {
   const [dataPath, setDataPath] = useState("");
   const [isCopied, setIsCopied] = useState(false);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [appVersion, setAppVersion] = useState("0.1.0");
 
   const { themeMode, autoScroll, swapSidebars, setThemeMode, setAutoScroll, setSwapSidebars } = useThemeStore();
 
@@ -41,6 +46,8 @@ export default function GeneralSettings() {
         console.error("An error occurred:", error);
       }
     });
+
+    getVersion().then(setAppVersion).catch(console.error);
   }, []);
 
   const handleShowInFinder = async () => {
@@ -58,6 +65,33 @@ export default function GeneralSettings() {
       setTimeout(() => setIsCopied(false), 2000);
     } catch (error) {
       console.error("Failed to copy:", error);
+    }
+  };
+
+  const handleCheckForUpdates = async () => {
+    setIsCheckingUpdate(true);
+    try {
+      const update = await check();
+      if (update) {
+        toast.success(`发现新版本 ${update.version}`, {
+          description: "正在下载更新...",
+          duration: 5000,
+        });
+        await update.downloadAndInstall();
+        toast.success("更新已下载", {
+          description: "请重启应用以完成更新",
+          duration: 10000,
+        });
+      } else {
+        toast.info("当前已是最新版本");
+      }
+    } catch (error) {
+      console.error("Check for updates failed:", error);
+      toast.error("检查更新失败", {
+        description: error instanceof Error ? error.message : "未知错误",
+      });
+    } finally {
+      setIsCheckingUpdate(false);
     }
   };
 
@@ -122,6 +156,36 @@ export default function GeneralSettings() {
               onCheckedChange={(checked) => setSwapSidebars(checked === true)}
               className="data-[state=checked]:border-primary data-[state=checked]:bg-primary"
             />
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg bg-muted/80 p-4">
+        <h2 className="text mb-4 dark:text-neutral-200">关于</h2>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text dark:text-neutral-200">应用版本</span>
+              <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">v{appVersion}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text dark:text-neutral-200">检查更新</span>
+              <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">检查是否有新版本可用</p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCheckForUpdates}
+              disabled={isCheckingUpdate}
+              className="gap-2"
+            >
+              <RefreshCw className={clsx("size-4", isCheckingUpdate && "animate-spin")} />
+              {isCheckingUpdate ? "检查中..." : "检查更新"}
+            </Button>
           </div>
         </div>
       </section>

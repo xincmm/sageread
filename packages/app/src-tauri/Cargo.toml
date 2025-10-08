@@ -39,9 +39,11 @@ reqwest = { version = "0.12", features = ["stream"] }
 futures-util = "0.3"
 tauri-plugin-os = "2"
 tauri-plugin-shell = "2"
+tauri-plugin-updater = "2"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2"
+tauri-plugin-updater = "2"
 
 
 [profile.release]

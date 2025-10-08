@@ -47,6 +47,7 @@
     "@tauri-apps/plugin-os": "~2.3.1",
     "@tauri-apps/plugin-shell": "~2.3.1",
     "@tauri-apps/plugin-sql": "~2",
+    "@tauri-apps/plugin-updater": "~2.9.0",
     "@uiw/react-heat-map": "^2.3.3",
     "@zip.js/zip.js": "^2.7.52",
     "add": "^2.0.6",
