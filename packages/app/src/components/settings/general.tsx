@@ -19,29 +19,12 @@ export default function GeneralSettings() {
   const [dataPath, setDataPath] = useState("");
   const [isCopied, setIsCopied] = useState(false);
 
-  const {
-    themeMode,
-    themeColor,
-    autoScroll,
-    swapSidebars,
-    setThemeMode,
-    setThemeColor,
-    setAutoScroll,
-    setSwapSidebars,
-  } = useThemeStore();
+  const { themeMode, autoScroll, swapSidebars, setThemeMode, setAutoScroll, setSwapSidebars } = useThemeStore();
 
   const themeModeOptions = [
     { value: "auto" as ThemeMode, label: "系统" },
     { value: "light" as ThemeMode, label: "亮色" },
     { value: "dark" as ThemeMode, label: "暗色" },
-  ];
-
-  const themeColorOptions = [
-    { value: "default", label: "默认" },
-    { value: "perplexity", label: "Perplexity" },
-    { value: "slack", label: "Slack" },
-    { value: "corporate", label: "Corporate" },
-    { value: "nature", label: "Nature" },
   ];
 
   useEffect(() => {
@@ -82,16 +65,8 @@ export default function GeneralSettings() {
     setThemeMode(mode);
   };
 
-  const handleThemeColorChange = (color: string) => {
-    setThemeColor(color);
-  };
-
   const getCurrentThemeModeLabel = () => {
     return themeModeOptions.find((option) => option.value === themeMode)?.label || "系统";
-  };
-
-  const getCurrentThemeColorLabel = () => {
-    return themeColorOptions.find((option) => option.value === themeColor)?.label || "默认";
   };
 
   return (
@@ -99,32 +74,6 @@ export default function GeneralSettings() {
       <section className="rounded-lg bg-muted/80 p-4">
         <h2 className="text mb-4 dark:text-neutral-200">外观</h2>
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text dark:text-neutral-200">主题风格</span>
-              <p className="mt-2 text-neutral-600 text-xs dark:text-neutral-400">选择您偏好的主题风格</p>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="outline" className="w-32 justify-between">
-                  {getCurrentThemeColorLabel()}
-                  <ChevronDownIcon className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-32">
-                {themeColorOptions.map((option) => (
-                  <DropdownMenuItem
-                    key={option.value}
-                    onClick={() => handleThemeColorChange(option.value)}
-                    className={clsx("my-0.5", themeColor === option.value ? "bg-accent" : "")}
-                  >
-                    {option.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
           <div className="flex items-center justify-between">
             <div>
               <span className="text dark:text-neutral-200">明暗模式</span>

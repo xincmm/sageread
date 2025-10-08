@@ -5,7 +5,6 @@ import { create } from "zustand";
 
 interface ThemeState {
   themeMode: ThemeMode;
-  themeColor: string;
   systemIsDarkMode: boolean;
   themeCode: ThemeCode;
   isDarkMode: boolean;
@@ -20,7 +19,6 @@ interface ThemeState {
   dismissSystemUI: () => void;
   getIsDarkMode: () => boolean;
   setThemeMode: (mode: ThemeMode) => void;
-  setThemeColor: (color: string) => void;
   setAutoScroll: (enabled: boolean) => void;
   setSwapSidebars: (enabled: boolean) => void;
   updateAppTheme: (color: keyof Palette) => void;
@@ -32,13 +30,6 @@ const getInitialThemeMode = (): ThemeMode => {
     return (localStorage.getItem("themeMode") as ThemeMode) || "auto";
   }
   return "auto";
-};
-
-const getInitialThemeColor = (): string => {
-  if (typeof window !== "undefined" && localStorage) {
-    return localStorage.getItem("themeColor") || "default";
-  }
-  return "default";
 };
 
 const getInitialAutoScroll = (): boolean => {
@@ -59,12 +50,10 @@ const getInitialSwapSidebars = (): boolean => {
 
 export const useThemeStore = create<ThemeState>((set, get) => {
   const initialThemeMode = getInitialThemeMode();
-  const initialThemeColor = getInitialThemeColor();
   const initialAutoScroll = getInitialAutoScroll();
   const initialSwapSidebars = getInitialSwapSidebars();
 
   console.log("initialThemeMode", initialThemeMode);
-  console.log("initialThemeColor", initialThemeColor);
   console.log("initialAutoScroll", initialAutoScroll);
   console.log("initialSwapSidebars", initialSwapSidebars);
 
@@ -75,12 +64,8 @@ export const useThemeStore = create<ThemeState>((set, get) => {
   if (typeof window !== "undefined") {
     document.documentElement.className = document.documentElement.className
       .split(" ")
-      .filter((cls) => !cls.startsWith("theme-") && cls !== "dark")
+      .filter((cls) => cls !== "dark")
       .join(" ");
-
-    if (initialThemeColor !== "default") {
-      document.documentElement.classList.add(`theme-${initialThemeColor}`);
-    }
 
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
@@ -98,7 +83,6 @@ export const useThemeStore = create<ThemeState>((set, get) => {
 
   return {
     themeMode: initialThemeMode,
-    themeColor: initialThemeColor,
     systemIsDarkMode,
     isDarkMode,
     themeCode,
@@ -119,15 +103,10 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       const isDarkMode = mode === "dark" || (mode === "auto" && get().systemIsDarkMode);
 
       // Apply theme classes to document element
-      const themeColor = get().themeColor;
       document.documentElement.className = document.documentElement.className
         .split(" ")
-        .filter((cls) => !cls.startsWith("theme-") && cls !== "dark")
+        .filter((cls) => cls !== "dark")
         .join(" ");
-
-      if (themeColor !== "default") {
-        document.documentElement.classList.add(`theme-${themeColor}`);
-      }
 
       if (isDarkMode) {
         document.documentElement.classList.add("dark");
@@ -136,29 +115,7 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       set({ themeMode: mode, isDarkMode });
       set({ themeCode: getThemeCode() });
     },
-    setThemeColor: (color) => {
-      if (typeof window !== "undefined" && localStorage) {
-        localStorage.setItem("themeColor", color);
-      }
 
-      // Apply theme classes to document element
-      const isDarkMode = get().isDarkMode;
-      document.documentElement.className = document.documentElement.className
-        .split(" ")
-        .filter((cls) => !cls.startsWith("theme-") && cls !== "dark")
-        .join(" ");
-
-      if (color !== "default") {
-        document.documentElement.classList.add(`theme-${color}`);
-      }
-
-      if (isDarkMode) {
-        document.documentElement.classList.add("dark");
-      }
-
-      set({ themeColor: color });
-      set({ themeCode: getThemeCode() });
-    },
     setAutoScroll: (enabled) => {
       if (typeof window !== "undefined" && localStorage) {
         localStorage.setItem("autoScroll", enabled.toString());

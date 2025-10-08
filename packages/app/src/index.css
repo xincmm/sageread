@@ -3,12 +3,8 @@
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:is(.dark *));
 
-/* Import theme files */
+/* Import theme file */
 @import "./themes/default.css";
-@import "./themes/perplexity.css";
-@import "./themes/slack.css";
-@import "./themes/corporate.css";
-@import "./themes/nature.css";
 
 ::-webkit-scrollbar {
   width: 6px;
