@@ -66,9 +66,7 @@ jobs:
 
       - name: Sync version
         run: |
-          VERSION=${{ github.ref_name }}
-          VERSION=${VERSION#v}
-          jq ".version = \"$VERSION\"" packages/app/src-tauri/tauri.conf.json > tmp.json && mv tmp.json packages/app/src-tauri/tauri.conf.json
+          node -e "const fs=require('fs');const path='packages/app/src-tauri/tauri.conf.json';const data=JSON.parse(fs.readFileSync(path));data.version='${{ github.ref_name }}'.replace(/^v/,'');fs.writeFileSync(path,JSON.stringify(data,null,2));"
       
       - name: Remove existing binary signatures
         if: matrix.platform == 'macos-latest'
