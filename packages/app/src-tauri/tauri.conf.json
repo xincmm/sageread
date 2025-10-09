@@ -109,17 +109,18 @@
       "icons/icon.ico"
     ],
     "externalBin": [
-      {
-        "path": "binaries/woff2_compress",
-        "bundle": false
-      }
+      "binaries/woff2_compress"
     ],
     "resources": [
       "resources/fonts/*"
     ],
     "macOS": {
       "signingIdentity": "Developer ID Application: jing wen (9T3JWFM3KT)",
-      "forceSign": true
+      "signing": {
+        "skipSigning": [
+          "binaries/woff2_compress"
+        ]
+      }
     }
   },
   "plugins": {
