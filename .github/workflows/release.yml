@@ -82,6 +82,9 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # 只在 arm64 时进行签名和公证
+          TAURI_SIGNING_SKIP_SIGNING: ${{ matrix.args == '--target x86_64-apple-darwin' && 'true' || 'false' }}
+          TAURI_SIGNING_SKIP_NOTARIZE: ${{ matrix.args == '--target x86_64-apple-darwin' && 'true' || 'false' }}
         with:
           projectPath: './packages/app'
           tagName: ${{ github.ref_name }}
