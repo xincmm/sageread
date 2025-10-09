@@ -62,7 +62,21 @@ jobs:
           security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
           security find-identity -v -p codesigning build.keychain
+          security list-keychains -d user -s build.keychain
 
+      - name: Sync version
+        run: |
+          VERSION=${{ github.ref_name }}
+          VERSION=${VERSION#v}
+          jq ".version = \"$VERSION\"" packages/app/src-tauri/tauri.conf.json > tmp.json && mv tmp.json packages/app/src-tauri/tauri.conf.json
+      
+      - name: Remove existing binary signatures
+        if: matrix.platform == 'macos-latest'
+        run: |
+          if [ -f packages/app/src-tauri/binaries/woff2_compress ]; then
+            codesign --remove-signature packages/app/src-tauri/binaries/woff2_compress || true
+          fi
+      
       - name: Build and Release
         uses: tauri-apps/tauri-action@v0
         env:
