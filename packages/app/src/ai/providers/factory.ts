@@ -40,7 +40,7 @@ export function createProviderInstance(config: ProviderConfig) {
     case "anthropic":
       return createOpenAICompatible({
         apiKey: apiKey || "",
-        baseURL: baseUrl || "https://api.openai.com/v1",
+        baseURL: baseUrl || "https://api.anthropic.com/v1",
         includeUsage: true,
         name: "OpenAI Compatible",
         fetch: fetchTauri,
@@ -49,7 +49,7 @@ export function createProviderInstance(config: ProviderConfig) {
     case "gemini":
     case "google":
       return createGoogleGenerativeAI({
-        apiKey: apiKey || "",
+        apiKey: apiKey || "https://generativelanguage.googleapis.com/v1beta",
         baseURL: baseUrl,
       });
 

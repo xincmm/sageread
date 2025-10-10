@@ -292,13 +292,16 @@ export default function VectorModelManager() {
                     </div>
                   </div>
                   <div>
-                    <label className={labelClass}>API端点 *</label>
+                    <label className={labelClass}>API端点（完整URL）*</label>
                     <Input
                       value={formData.url}
                       onChange={(e) => setFormData((prev) => ({ ...prev, url: e.target.value }))}
-                      placeholder="https://api.openai.com/v1/embeddings"
+                      placeholder="https://api.openai.com/v1/embeddings（必须包含完整路径）"
                       className="h-8"
                     />
+                    <p className="mt-1 text-neutral-500 text-xs dark:text-neutral-400">
+                      请输入完整的 embeddings 端点 URL，包括路径（如 /v1/embeddings）
+                    </p>
                   </div>
                   <div>
                     <label className={labelClass}>API Key</label>

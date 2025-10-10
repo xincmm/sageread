@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use tiktoken_rs::o200k_base;
 
 use crate::models::VectorizerConfig;
+use crate::text::MAX_CHUNK_TOKENS;
 
 #[derive(Serialize)]
 struct EmbeddingRequest {
@@ -55,19 +56,17 @@ impl TextVectorizer {
 
     /// 将文本转换为向量
     pub async fn vectorize_text(&mut self, text: &str) -> Result<Vec<f32>> {
-        // 按 token 数量截断，避免超过后端上下文窗口
-        // 预留安全边界，假设后端窗口至少 512（llama.cpp 默认可调），这里取 480 tokens
-        let max_tokens: usize = 480;
+        // 使用统一的 token 限制配置
         let tokens = self.tokenizer.encode_with_special_tokens(text);
-        let processed_text = if tokens.len() > max_tokens {
+        let processed_text = if tokens.len() > MAX_CHUNK_TOKENS {
             log::warn!(
                 "文本过长 ({} tokens)，按 token 截断到 {} tokens",
                 tokens.len(),
-                max_tokens
+                MAX_CHUNK_TOKENS
             );
             let preview = text.chars().take(120).collect::<String>();
             log::debug!("原文本预览(120)：{}", preview);
-            let clipped = &tokens[..max_tokens];
+            let clipped = &tokens[..MAX_CHUNK_TOKENS];
             // 将截断后的 token 反解码为字符串
             self.tokenizer.decode(clipped.to_vec())
                 .unwrap_or_else(|_| text.chars().take(1000).collect::<String>())

@@ -240,10 +240,10 @@ function ChatPage() {
       <div className="flex h-full w-full overflow-hidden">
         <Resizable
           defaultSize={{
-            width: "42%",
+            width: "40%",
             height: "100%",
           }}
-          minWidth={showToolDetail ? "42%" : "100%"}
+          minWidth={showToolDetail ? "30%" : "100%"}
           maxWidth={showToolDetail ? "70%" : "100%"}
           enable={{
             top: false,
@@ -333,6 +333,7 @@ function ChatPage() {
                       status={status}
                       activeBookId={activeBookId}
                       setActiveBookId={setActiveBookId}
+                      showToolDetail={showToolDetail}
                     />
                   </div>
                 </div>
