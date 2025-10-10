@@ -48,8 +48,21 @@ pub async fn save_book(app_handle: AppHandle, data: BookUploadData) -> Result<Si
 
     let cover_path = if let Some(cover_temp_path) = &data.cover_temp_file_path {
         let cover_file = book_dir.join("cover.jpg");
-        std::fs::rename(cover_temp_path, &cover_file)
-            .map_err(|e| format!("移动封面文件失败: {}", e))?;
+        match std::fs::rename(cover_temp_path, &cover_file) {
+            Ok(_) => {}
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+                log::warn!(
+                    "rename cover failed (missing source): {:?} -> {:?}, fallback to copy",
+                    cover_temp_path,
+                    cover_file
+                );
+                std::fs::copy(cover_temp_path, &cover_file)
+                    .map_err(|e| format!("复制封面文件失败: {}", e))?;
+            }
+            Err(err) => {
+                return Err(format!("移动封面文件失败: {}", err));
+            }
+        }
         Some(format!("books/{}/cover.jpg", data.id))
     } else {
         None

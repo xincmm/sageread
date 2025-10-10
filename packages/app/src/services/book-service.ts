@@ -24,7 +24,7 @@ import { partialMD5 } from "@/utils/md5";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { appDataDir, tempDir } from "@tauri-apps/api/path";
 import { join } from "@tauri-apps/api/path";
-import { writeFile } from "@tauri-apps/plugin-fs";
+import { readFile, writeFile } from "@tauri-apps/plugin-fs";
 
 export async function uploadBook(file: File): Promise<SimpleBook> {
   try {
@@ -442,7 +442,7 @@ export async function convertBookWithStatusUrls(book: BookWithStatus): Promise<B
       : undefined;
 
     const fileUrl = convertFileSrc(absoluteFilePath);
-    const coverUrl = absoluteCoverPath ? convertFileSrc(absoluteCoverPath) : undefined;
+    const coverUrl = absoluteCoverPath ? await createCoverUrl(absoluteCoverPath) : undefined;
 
     return {
       ...book,
@@ -481,13 +481,9 @@ export async function loadReadableBookFile(
       ? candidate.path
       : `${appDataDirPath}/${candidate.path}`;
     try {
-      const fileUrl = convertFileSrc(absolutePath);
-      const response = await fetch(fileUrl);
-      if (!response.ok) {
-        continue;
-      }
-      const arrayBuffer = await response.arrayBuffer();
-      return new File([arrayBuffer], candidate.filename, {
+      const fileContent = await readFile(absolutePath);
+      const buffer = fileContent instanceof Uint8Array ? fileContent : new Uint8Array(fileContent as ArrayBuffer);
+      return new File([buffer], candidate.filename, {
         type: getFileMimeType(candidate.filename),
       });
     } catch (error) {
@@ -740,4 +736,64 @@ export function getFileMimeType(fileName: string): string {
 
 function getFileNameWithoutExt(fileName: string): string {
   return fileName.replace(/\.[^/.]+$/, "");
+}
+
+async function createCoverUrl(path: string): Promise<string | undefined> {
+  try {
+    const bytes = await readFile(path);
+    if (!bytes) return undefined;
+    const data = normalizeToUint8Array(bytes);
+    if (!data?.length) return undefined;
+    const mime = getMimeFromFilename(path);
+    return bytesToDataUrl(data, mime);
+  } catch (error) {
+    console.warn("读取封面文件失败，回退 convertFileSrc:", error);
+    try {
+      return convertFileSrc(path);
+    } catch (err) {
+      console.warn("convertFileSrc 加载封面失败:", err);
+      return undefined;
+    }
+  }
+}
+
+function normalizeToUint8Array(value: unknown): Uint8Array | undefined {
+  if (!value) return undefined;
+  if (value instanceof Uint8Array) return value;
+  if (value instanceof ArrayBuffer) return new Uint8Array(value);
+  if (Array.isArray(value)) return Uint8Array.from(value);
+  return undefined;
+}
+
+function bytesToDataUrl(bytes: Uint8Array, mime = "application/octet-stream"): string {
+  if (typeof window === "undefined" && typeof Buffer !== "undefined") {
+    const base64 = Buffer.from(bytes).toString("base64");
+    return `data:${mime};base64,${base64}`;
+  }
+
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+  const base64 = window.btoa(binary);
+  return `data:${mime};base64,${base64}`;
+}
+
+function getMimeFromFilename(path: string): string {
+  const ext = path.toLowerCase().split(".").pop();
+  switch (ext) {
+    case "png":
+      return "image/png";
+    case "jpeg":
+    case "jpg":
+      return "image/jpeg";
+    case "webp":
+      return "image/webp";
+    case "gif":
+      return "image/gif";
+    default:
+      return "image/jpeg";
+  }
 }
