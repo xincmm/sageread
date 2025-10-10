@@ -60,17 +60,23 @@
         "media-src": [
           "*",
           "data:",
-          "blob:"
+          "blob:",
+          "https:",
+          "http:"
         ],
         "frame-src": [
           "*",
           "data:",
-          "blob:"
+          "blob:",
+          "https:",
+          "http:"
         ],
         "child-src": [
           "*",
           "data:",
-          "blob:"
+          "blob:",
+          "https:",
+          "http:"
         ],
         "default-src": [
           "'self'",
@@ -83,19 +89,25 @@
           "'self'",
           "asset://localhost",
           "data:",
-          "blob:"
+          "blob:",
+          "https:",
+          "http:"
         ],
         "font-src": [
           "'self'",
           "asset://localhost",
-          "data:"
+          "data:",
+          "https:",
+          "http:"
         ],
         "connect-src": [
           "'self'",
           "asset://localhost",
           "ipc://localhost",
           "data:",
-          "blob:"
+          "blob:",
+          "https:",
+          "http:"
         ]
       },
       "assetProtocol": {
@@ -122,10 +134,7 @@
     ],
     "resources": [
       "resources/fonts/*"
-    ],
-    "macOS": {
-      "signingIdentity": "Developer ID Application: jing wen (9T3JWFM3KT)"
-    }
+    ]
   },
   "plugins": {
     "updater": {
