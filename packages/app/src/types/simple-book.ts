@@ -25,6 +25,10 @@ export interface BookUploadData {
   tempFilePath: string;
   coverTempFilePath?: string;
   metadata: any;
+  derivedFiles?: Array<{
+    tempFilePath: string;
+    filename: string;
+  }>;
 }
 
 export interface BookQueryOptions {

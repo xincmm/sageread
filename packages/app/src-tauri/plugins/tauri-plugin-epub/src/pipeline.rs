@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::database::VectorDatabase;
 use crate::epub::EpubReader;
@@ -12,6 +12,22 @@ use crate::models::{
 };
 use epub2mdbook::convert_epub_to_mdbook;
 
+fn find_epub_in_dir(dir: &Path) -> Option<PathBuf> {
+    let entries = std::fs::read_dir(dir).ok()?;
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .map(|ext| ext.eq_ignore_ascii_case("epub"))
+            .unwrap_or(false)
+        {
+            return Some(path);
+        }
+    }
+    None
+}
+
 /// Core pipeline: book_dir -> locate book.epub -> parse -> write chapters -> vectorize -> persist to SQLite
 pub async fn process_epub_to_db<P: AsRef<Path>, F>(
     book_dir: P,
@@ -22,17 +38,25 @@ where
     F: FnMut(ProgressUpdate) + Send,
 {
     let book_dir = book_dir.as_ref();
-    let epub_path = book_dir.join("book.epub");
+    let mut epub_path = book_dir.join("book.epub");
     let db_path = book_dir.join("vectors.sqlite");
 
     if !epub_path.exists() {
-        log::error!("EPUB file not found at path: {:?}", epub_path);
-        log::error!("Book directory contents: {:?}", 
-            std::fs::read_dir(book_dir)
-                .map(|entries| entries.collect::<Result<Vec<_>, _>>())
-                .unwrap_or_else(|e| Err(e))
-        );
-        anyhow::bail!("EPUB not found: {:?}", epub_path);
+        if let Some(candidate) = find_epub_in_dir(book_dir) {
+            log::warn!(
+                "默认 EPUB 文件不存在，使用目录中的候选文件: {:?}",
+                candidate
+            );
+            epub_path = candidate;
+        } else {
+            log::error!("EPUB file not found at path: {:?}", epub_path);
+            log::error!("Book directory contents: {:?}", 
+                std::fs::read_dir(book_dir)
+                    .map(|entries| entries.collect::<Result<Vec<_>, _>>())
+                    .unwrap_or_else(|e| Err(e))
+            );
+            anyhow::bail!("EPUB not found: {:?}", epub_path);
+        }
     }
 
     log::info!("Starting EPUB processing pipeline for book directory: {:?}", book_dir);

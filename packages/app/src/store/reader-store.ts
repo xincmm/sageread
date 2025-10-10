@@ -1,6 +1,6 @@
 import { type BookDoc, DocumentLoader } from "@/lib/document";
 import { loadBookConfig, saveBookConfig } from "@/services/app-service";
-import { getBookById } from "@/services/book-service";
+import { getBookById, getFileMimeType } from "@/services/book-service";
 import type { Book, BookConfig, BookNote, BookProgress } from "@/types/book";
 import type { SystemSettings } from "@/types/settings";
 import type { SimpleBook } from "@/types/simple-book";
@@ -440,8 +440,8 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
       const fileUrl = convertFileSrc(book.filePath!);
       const response = await fetch(fileUrl);
       const arrayBuffer = await response.arrayBuffer();
-      const filename = book.filePath!.split("/").pop() || "book.epub";
-      const file = new File([arrayBuffer], filename, { type: "application/epub+zip" });
+      const filename = book.filePath?.split("/").pop() || `book.${book.format.toLowerCase()}`;
+      const file = new File([arrayBuffer], filename, { type: getFileMimeType(filename) });
       const config = await loadBookConfig(bookId, settings);
       if (!config) {
         throw new Error("Config not found");

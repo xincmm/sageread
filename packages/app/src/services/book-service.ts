@@ -1,3 +1,4 @@
+import type { BookDoc } from "@/lib/document";
 import { DocumentLoader } from "@/lib/document";
 import type {
   BookQueryOptions,
@@ -38,12 +39,23 @@ export async function uploadBook(file: File): Promise<SimpleBook> {
     const tempFilePath = await join(tempDirPath, tempFileName);
     const fileData = await file.arrayBuffer();
     await writeFile(tempFilePath, new Uint8Array(fileData));
-    const metadata = await extractMetadataOnly(file);
+
+    const defaultMetadata = getDefaultMetadata(file.name);
+    const bookDoc = shouldParseWithDocumentLoader(format)
+      ? await tryParseBookDocument(fileData, file.name)
+      : null;
+    const metadata = {
+      ...defaultMetadata,
+      ...(bookDoc?.metadata ?? {}),
+    };
+
+    const formattedTitle = formatTitle(metadata.title) || getFileNameWithoutExt(file.name);
+    const formattedAuthor = formatAuthors(metadata.author) || "Unknown";
+    const primaryLanguage = getPrimaryLanguage(metadata.language) || "en";
 
     let coverTempFilePath: string | undefined;
-    if (format === "EPUB") {
+    if (bookDoc) {
       try {
-        const bookDoc = await parseEpubFile(fileData, file.name);
         const coverBlob = await bookDoc.getCover();
         if (coverBlob) {
           const coverTempFileName = `cover_${bookHash}.jpg`;
@@ -57,16 +69,36 @@ export async function uploadBook(file: File): Promise<SimpleBook> {
       }
     }
 
+    let derivedFiles: BookUploadData["derivedFiles"];
+    if (format === "MOBI" && bookDoc) {
+      const derivedEpubPath = await createDerivedEpubFromBookDoc(bookDoc, {
+        tempDirPath,
+        bookHash,
+        title: formattedTitle,
+        author: formattedAuthor,
+        language: primaryLanguage,
+      });
+      if (derivedEpubPath) {
+        derivedFiles = [
+          {
+            tempFilePath: derivedEpubPath,
+            filename: "book.epub",
+          },
+        ];
+      }
+    }
+
     const uploadData: BookUploadData = {
       id: bookHash,
-      title: formatTitle(metadata.title) || getFileNameWithoutExt(file.name),
-      author: formatAuthors(metadata.author) || "Unknown",
+      title: formattedTitle,
+      author: formattedAuthor,
       format,
       fileSize: file.size,
-      language: getPrimaryLanguage(metadata.language) || "en",
+      language: primaryLanguage,
       tempFilePath: tempFilePath,
       coverTempFilePath,
-      metadata: metadata,
+      metadata,
+      ...(derivedFiles?.length ? { derivedFiles } : {}),
     };
 
     const result = await invoke<SimpleBook>("save_book", { data: uploadData });
@@ -77,27 +109,288 @@ export async function uploadBook(file: File): Promise<SimpleBook> {
   }
 }
 
-async function extractMetadataOnly(file: File): Promise<any> {
+const DOCUMENT_LOADER_SUPPORTED_FORMATS: SimpleBook["format"][] = ["EPUB", "MOBI", "CBZ", "FB2", "FBZ"];
+
+function shouldParseWithDocumentLoader(format: SimpleBook["format"]): boolean {
+  return DOCUMENT_LOADER_SUPPORTED_FORMATS.includes(format);
+}
+
+function getDefaultMetadata(fileName: string) {
+  return {
+    title: getFileNameWithoutExt(fileName),
+    author: "Unknown",
+    language: "en",
+  };
+}
+
+async function tryParseBookDocument(fileData: ArrayBuffer, fileName: string): Promise<BookDoc | null> {
   try {
-    if (file.name.toLowerCase().endsWith(".epub")) {
-      const arrayBuffer = await file.arrayBuffer();
-      const bookDoc = await parseEpubFile(arrayBuffer, file.name);
-      return bookDoc.metadata;
+    return await parseBookDocument(fileData, fileName);
+  } catch (error) {
+    console.warn("解析书籍文件失败，使用默认元数据:", error);
+    return null;
+  }
+}
+
+interface DerivedEpubOptions {
+  tempDirPath: string;
+  bookHash: string;
+  title: string;
+  author: string;
+  language: string;
+}
+
+interface DerivedChapter {
+  title: string;
+  content: string;
+}
+
+interface SimpleEpubMetadata {
+  title: string;
+  author: string;
+  language: string;
+  identifier: string;
+}
+
+const DERIVED_ZIP_OPTIONS = {
+  lastAccessDate: new Date(0),
+  lastModDate: new Date(0),
+};
+
+const escapeXml = (str: string) =>
+  (str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+
+async function createDerivedEpubFromBookDoc(bookDoc: BookDoc, options: DerivedEpubOptions): Promise<string | null> {
+  try {
+    const chapters = await extractChaptersFromBookDoc(bookDoc);
+    if (!chapters.length) {
+      return null;
     }
 
-    return {
-      title: getFileNameWithoutExt(file.name),
-      author: "Unknown",
-      language: "en",
-    };
+    const blob = await buildSimpleEpub(chapters, {
+      title: options.title,
+      author: options.author,
+      language: options.language || "en",
+      identifier: options.bookHash,
+    });
+    const arrayBuffer = await blob.arrayBuffer();
+    const derivedTempPath = await join(options.tempDirPath, `derived_epub_${options.bookHash}.epub`);
+    await writeFile(derivedTempPath, new Uint8Array(arrayBuffer));
+    return derivedTempPath;
   } catch (error) {
-    console.warn("元数据提取失败，使用默认值:", error);
-    return {
-      title: getFileNameWithoutExt(file.name),
-      author: "Unknown",
-      language: "en",
-    };
+    console.warn("生成 MOBI 衍生 EPUB 失败:", error);
+    return null;
   }
+}
+
+async function extractChaptersFromBookDoc(bookDoc: BookDoc): Promise<DerivedChapter[]> {
+  const sections = bookDoc.sections ?? [];
+  if (!sections.length) return [];
+
+  const serializer = new XMLSerializer();
+  const tocTitleMap = buildSectionTitleMap(bookDoc);
+  const chapters: DerivedChapter[] = [];
+
+  for (let index = 0; index < sections.length; index++) {
+    const section: any = sections[index];
+    if (typeof section?.createDocument !== "function") continue;
+
+    try {
+      const created = await section.createDocument();
+      const doc = ensureDocument(created);
+      if (!doc) continue;
+
+      sanitizeChapterDocument(doc);
+      const body = doc.querySelector("body");
+      const content = body?.innerHTML?.trim() || serializer.serializeToString(doc);
+      if (!content) continue;
+
+      const tocLabel = tocTitleMap.get(index);
+      const heading = pickHeadingTitle(doc);
+      const title = (tocLabel || heading || `第${index + 1}章`).trim() || `第${index + 1}章`;
+
+      chapters.push({
+        title,
+        content,
+      });
+    } catch (error) {
+      console.warn("读取 MOBI 章节失败:", error);
+    }
+  }
+
+  return chapters;
+}
+
+function ensureDocument(input: unknown): Document | null {
+  if (!input) return null;
+  if (typeof (input as Document).querySelector === "function") {
+    return input as Document;
+  }
+  if (typeof input === "string") {
+    return new DOMParser().parseFromString(input, "application/xhtml+xml");
+  }
+  if (typeof (input as { toString: () => string }).toString === "function") {
+    return new DOMParser().parseFromString((input as { toString: () => string }).toString(), "application/xhtml+xml");
+  }
+  return null;
+}
+
+function buildSectionTitleMap(bookDoc: BookDoc): Map<number, string> {
+  const map = new Map<number, string>();
+  const tocItems = bookDoc.toc ?? [];
+  const splitHref = bookDoc.splitTOCHref?.bind(bookDoc);
+
+  const traverse = (items: any[]) => {
+    for (const item of items) {
+      if (!item?.href || typeof item.href !== "string") continue;
+      if (splitHref) {
+        try {
+          const parts = splitHref(item.href);
+          const ref = parts?.[0];
+          if (typeof ref === "number" && !map.has(ref)) {
+            const label = typeof item.label === "string" ? item.label.trim() : "";
+            if (label) {
+              map.set(ref, label);
+            }
+          }
+        } catch {
+          // ignore split errors
+        }
+      }
+      if (Array.isArray(item?.subitems) && item.subitems.length) {
+        traverse(item.subitems);
+      }
+    }
+  };
+
+  traverse(tocItems);
+  return map;
+}
+
+function pickHeadingTitle(doc: Document): string | undefined {
+  const heading = doc.querySelector("h1, h2, h3, h4, h5, h6");
+  return heading?.textContent?.trim() || undefined;
+}
+
+function sanitizeChapterDocument(doc: Document): void {
+  const removableSelectors = [
+    "script",
+    "style",
+    "link",
+    "img",
+    "video",
+    "audio",
+    "source",
+    "picture",
+    "iframe",
+    "object",
+    "embed",
+    "svg",
+  ];
+
+  removableSelectors.forEach((selector) => {
+    doc.querySelectorAll(selector).forEach((el) => el.remove());
+  });
+
+  doc.querySelectorAll<HTMLElement>("[src^='blob:']").forEach((el) => el.removeAttribute("src"));
+}
+
+async function buildSimpleEpub(chapters: DerivedChapter[], metadata: SimpleEpubMetadata): Promise<Blob> {
+  const { ZipWriter, BlobWriter, TextReader } = await import("@zip.js/zip.js");
+
+  const zipWriter = new ZipWriter(new BlobWriter("application/epub+zip"), {
+    extendedTimestamp: false,
+  });
+  await zipWriter.add("mimetype", new TextReader("application/epub+zip"), DERIVED_ZIP_OPTIONS);
+
+  const containerXml = `<?xml version="1.0" encoding="UTF-8"?>
+<container xmlns="urn:oasis:names:tc:opendocument:xmlns:container" version="1.0">
+  <rootfiles>
+    <rootfile full-path="content.opf" media-type="application/oebps-package+xml"/>
+  </rootfiles>
+</container>`;
+  await zipWriter.add("META-INF/container.xml", new TextReader(containerXml.trim()), DERIVED_ZIP_OPTIONS);
+
+  const manifestItems = chapters
+    .map(
+      (_, index) =>
+        `<item id="chap${index + 1}" href="OEBPS/chapter${index + 1}.xhtml" media-type="application/xhtml+xml"/>`,
+    )
+    .join("\n");
+
+  const spineItems = chapters.map((_, index) => `<itemref idref="chap${index + 1}"/>`).join("\n");
+
+  const navPoints = chapters
+    .map(
+      (chapter, index) => `<navPoint id="navPoint-${index + 1}" playOrder="${index + 1}">
+  <navLabel><text>${escapeXml(chapter.title)}</text></navLabel>
+  <content src="./OEBPS/chapter${index + 1}.xhtml" />
+</navPoint>`,
+    )
+    .join("\n");
+
+  const tocNcx = `<?xml version="1.0" encoding="UTF-8"?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+  <head>
+    <meta name="dtb:uid" content="${escapeXml(metadata.identifier)}" />
+    <meta name="dtb:depth" content="1" />
+    <meta name="dtb:totalPageCount" content="0" />
+    <meta name="dtb:maxPageNumber" content="0" />
+  </head>
+  <docTitle><text>${escapeXml(metadata.title)}</text></docTitle>
+  <docAuthor><text>${escapeXml(metadata.author)}</text></docAuthor>
+  <navMap>
+    ${navPoints}
+  </navMap>
+</ncx>`;
+  await zipWriter.add("toc.ncx", new TextReader(tocNcx.trim()), DERIVED_ZIP_OPTIONS);
+
+  const cssContent = `
+body { line-height: 1.6; font-size: 1em; font-family: serif; text-align: justify; }
+p { text-indent: 2em; margin: 0; }
+h1, h2, h3, h4, h5, h6 { text-indent: 0; }
+`;
+  await zipWriter.add("style.css", new TextReader(cssContent.trim()), DERIVED_ZIP_OPTIONS);
+
+  for (let i = 0; i < chapters.length; i++) {
+    const chapter = chapters[i]!;
+    const chapterContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="${metadata.language}">
+  <head>
+    <title>${escapeXml(chapter.title)}</title>
+    <link rel="stylesheet" type="text/css" href="../style.css"/>
+  </head>
+  <body>${chapter.content}</body>
+</html>`;
+    await zipWriter.add(`OEBPS/chapter${i + 1}.xhtml`, new TextReader(chapterContent.trim()), DERIVED_ZIP_OPTIONS);
+  }
+
+  const contentOpf = `<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="book-id" version="2.0">
+  <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <dc:title>${escapeXml(metadata.title)}</dc:title>
+    <dc:language>${escapeXml(metadata.language)}</dc:language>
+    <dc:creator>${escapeXml(metadata.author)}</dc:creator>
+    <dc:identifier id="book-id">${escapeXml(metadata.identifier)}</dc:identifier>
+  </metadata>
+  <manifest>
+    ${manifestItems}
+    <item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="css" href="style.css" media-type="text/css"/>
+  </manifest>
+  <spine toc="ncx">
+    ${spineItems}
+  </spine>
+</package>`;
+  await zipWriter.add("content.opf", new TextReader(contentOpf.trim()), DERIVED_ZIP_OPTIONS);
+
+  return zipWriter.close();
 }
 
 export async function getBooks(options: BookQueryOptions = {}): Promise<SimpleBook[]> {
@@ -327,13 +620,13 @@ export async function updateBookVectorizationMeta(
   return updateBookStatus(bookId, { metadata: newMetadata });
 }
 
-async function parseEpubFile(fileData: ArrayBuffer, fileName: string) {
+async function parseBookDocument(fileData: ArrayBuffer, fileName: string): Promise<BookDoc | null> {
   const file = new File([fileData], fileName, {
     type: getFileMimeType(fileName),
   });
   const loader = new DocumentLoader(file);
   const { book } = await loader.open();
-  return book;
+  return book ?? null;
 }
 
 function getBookFormat(fileName: string): SimpleBook["format"] {
@@ -356,7 +649,7 @@ function getBookFormat(fileName: string): SimpleBook["format"] {
   }
 }
 
-function getFileMimeType(fileName: string): string {
+export function getFileMimeType(fileName: string): string {
   const ext = fileName.toLowerCase().split(".").pop();
   switch (ext) {
     case "epub":

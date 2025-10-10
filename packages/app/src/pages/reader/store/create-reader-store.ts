@@ -1,7 +1,7 @@
 import { DocumentLoader } from "@/lib/document";
 import type { BookDoc } from "@/lib/document";
 import { loadBookConfig, saveBookConfig } from "@/services/app-service";
-import { getBookWithStatusById } from "@/services/book-service";
+import { getBookWithStatusById, getFileMimeType } from "@/services/book-service";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useLibraryStore } from "@/store/library-store";
 import type { Book, BookConfig, BookNote, BookProgress } from "@/types/book";
@@ -83,9 +83,10 @@ export const createReaderStore = (bookId: string) => {
         }
 
         const arrayBuffer = await response.arrayBuffer();
-        const filename = simpleBook.filePath.split("/").pop() || "book.epub";
+        const filename =
+          simpleBook.filePath?.split("/").pop() || `book.${simpleBook.format.toLowerCase()}`;
         const file = new File([arrayBuffer], filename, {
-          type: "application/epub+zip",
+          type: getFileMimeType(filename),
         });
 
         const book = {

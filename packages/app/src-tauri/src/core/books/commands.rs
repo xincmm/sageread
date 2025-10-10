@@ -35,6 +35,17 @@ pub async fn save_book(app_handle: AppHandle, data: BookUploadData) -> Result<Si
         None
     };
 
+    if let Some(derived_files) = &data.derived_files {
+        for derived in derived_files {
+            let target_path = book_dir.join(&derived.filename);
+            if let Some(parent) = target_path.parent() {
+                fs::create_dir_all(parent).map_err(|e| format!("创建衍生文件目录失败: {}", e))?;
+            }
+            std::fs::rename(&derived.temp_file_path, &target_path)
+                .map_err(|e| format!("移动衍生文件失败: {}", e))?;
+        }
+    }
+
     let metadata_path = book_dir.join("metadata.json");
     let metadata_json = serde_json::to_string_pretty(&data.metadata)
         .map_err(|e| format!("序列化元数据失败: {}", e))?;

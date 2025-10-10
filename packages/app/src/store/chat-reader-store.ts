@@ -1,7 +1,7 @@
 import type { BookDoc } from "@/lib/document";
 import { DocumentLoader } from "@/lib/document";
 import { loadBookConfig } from "@/services/app-service";
-import { getBookWithStatusById } from "@/services/book-service";
+import { getBookWithStatusById, getFileMimeType } from "@/services/book-service";
 import type { Book, BookConfig } from "@/types/book";
 import { appDataDir } from "@tauri-apps/api/path";
 import { create } from "zustand";
@@ -73,9 +73,10 @@ export const useChatReaderStore = create<ChatReaderStore>((set, get) => ({
         }
 
         const arrayBuffer = await response.arrayBuffer();
-        const filename = simpleBook.filePath.split("/").pop() || "book.epub";
+        const filename =
+          simpleBook.filePath?.split("/").pop() || `book.${simpleBook.format.toLowerCase()}`;
         const file = new File([arrayBuffer], filename, {
-          type: "application/epub+zip",
+          type: getFileMimeType(filename),
         });
 
         const book = {
