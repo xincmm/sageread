@@ -93,4 +93,4 @@ jobs:
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true
-          args: ${{ matrix.args }}
+          args: ${{ matrix.args }} --debug
