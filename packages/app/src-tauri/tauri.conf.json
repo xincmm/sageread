@@ -49,30 +49,37 @@
       "dangerousDisableAssetCspModification": true,
       "csp": {
         "script-src": [
-          "*",
+          "'self'",
+          "asset://localhost",
           "'unsafe-inline'",
           "'unsafe-eval'"
         ],
         "style-src": [
-          "*",
-          "'unsafe-inline'"
+          "'self'",
+          "asset://localhost",
+          "data:",
+          "blob:",
+          "'unsafe-inline'",
+          "https:",
+          "http:"
         ],
         "media-src": [
-          "*",
+          "'self'",
+          "asset://localhost",
           "data:",
           "blob:",
           "https:",
           "http:"
         ],
         "frame-src": [
-          "*",
+          "'self'",
           "data:",
           "blob:",
           "https:",
           "http:"
         ],
         "child-src": [
-          "*",
+          "'self'",
           "data:",
           "blob:",
           "https:",
@@ -134,10 +141,7 @@
     ],
     "resources": [
       "resources/fonts/*"
-    ],
-    "macOS": {
-      "signingIdentity": "Developer ID Application: jing wen (9T3JWFM3KT)"
-    }
+    ]
   },
   "plugins": {
     "updater": {
