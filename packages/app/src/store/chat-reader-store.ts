@@ -1,7 +1,7 @@
 import type { BookDoc } from "@/lib/document";
 import { DocumentLoader } from "@/lib/document";
 import { loadBookConfig } from "@/services/app-service";
-import { getBookWithStatusById, getFileMimeType } from "@/services/book-service";
+import { getBookWithStatusById, loadReadableBookFile } from "@/services/book-service";
 import type { Book, BookConfig } from "@/types/book";
 import { appDataDir } from "@tauri-apps/api/path";
 import { create } from "zustand";
@@ -64,20 +64,14 @@ export const useChatReaderStore = create<ChatReaderStore>((set, get) => ({
         if (!simpleBook) throw new Error("Book not found");
         if (!simpleBook.filePath) throw new Error("Book file path is missing");
 
-        const fileUrl = simpleBook.fileUrl;
         const baseDir = await appDataDir();
-
-        const response = await fetch(fileUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch book file: ${response.status} ${response.statusText}`);
-        }
-
-        const arrayBuffer = await response.arrayBuffer();
-        const filename =
-          simpleBook.filePath?.split("/").pop() || `book.${simpleBook.format.toLowerCase()}`;
-        const file = new File([arrayBuffer], filename, {
-          type: getFileMimeType(filename),
-        });
+        const file = await loadReadableBookFile(
+          {
+            filePath: simpleBook.filePath,
+            format: simpleBook.format,
+          },
+          bookId,
+        );
 
         const book = {
           id: simpleBook.id,

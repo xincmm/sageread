@@ -1,6 +1,6 @@
 import { type BookDoc, DocumentLoader } from "@/lib/document";
 import { loadBookConfig, saveBookConfig } from "@/services/app-service";
-import { getBookById, getFileMimeType } from "@/services/book-service";
+import { getBookById, loadReadableBookFile } from "@/services/book-service";
 import type { Book, BookConfig, BookNote, BookProgress } from "@/types/book";
 import type { SystemSettings } from "@/types/settings";
 import type { SimpleBook } from "@/types/simple-book";
@@ -436,12 +436,13 @@ export const useReaderStore = create<ReaderStore>((set, get) => ({
       if (!book) {
         throw new Error("Book not found");
       }
-      const { convertFileSrc } = await import("@tauri-apps/api/core");
-      const fileUrl = convertFileSrc(book.filePath!);
-      const response = await fetch(fileUrl);
-      const arrayBuffer = await response.arrayBuffer();
-      const filename = book.filePath?.split("/").pop() || `book.${book.format.toLowerCase()}`;
-      const file = new File([arrayBuffer], filename, { type: getFileMimeType(filename) });
+      const file = await loadReadableBookFile(
+        {
+          filePath: book.filePath,
+          format: book.format,
+        },
+        bookId,
+      );
       const config = await loadBookConfig(bookId, settings);
       if (!config) {
         throw new Error("Config not found");

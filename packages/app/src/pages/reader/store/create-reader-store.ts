@@ -1,7 +1,7 @@
 import { DocumentLoader } from "@/lib/document";
 import type { BookDoc } from "@/lib/document";
 import { loadBookConfig, saveBookConfig } from "@/services/app-service";
-import { getBookWithStatusById, getFileMimeType } from "@/services/book-service";
+import { getBookWithStatusById, loadReadableBookFile } from "@/services/book-service";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useLibraryStore } from "@/store/library-store";
 import type { Book, BookConfig, BookNote, BookProgress } from "@/types/book";
@@ -74,20 +74,14 @@ export const createReaderStore = (bookId: string) => {
         if (!simpleBook) throw new Error("Book not found");
         if (!simpleBook.filePath) throw new Error("Book file path is missing");
 
-        const fileUrl = simpleBook.fileUrl;
         const baseDir = await appDataDir();
-
-        const response = await fetch(fileUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch book file: ${response.status} ${response.statusText}`);
-        }
-
-        const arrayBuffer = await response.arrayBuffer();
-        const filename =
-          simpleBook.filePath?.split("/").pop() || `book.${simpleBook.format.toLowerCase()}`;
-        const file = new File([arrayBuffer], filename, {
-          type: getFileMimeType(filename),
-        });
+        const file = await loadReadableBookFile(
+          {
+            filePath: simpleBook.filePath,
+            format: simpleBook.format,
+          },
+          bookId,
+        );
 
         const book = {
           id: simpleBook.id,

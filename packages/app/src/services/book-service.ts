@@ -1,5 +1,5 @@
 import type { BookDoc } from "@/lib/document";
-import { DocumentLoader } from "@/lib/document";
+import { DocumentLoader, EXTS } from "@/lib/document";
 import type {
   BookQueryOptions,
   BookStatus,
@@ -29,7 +29,7 @@ import { writeFile } from "@tauri-apps/plugin-fs";
 export async function uploadBook(file: File): Promise<SimpleBook> {
   try {
     const format = getBookFormat(file.name);
-    if (!["EPUB", "PDF", "MOBI", "CBZ", "FB2", "FBZ"].includes(format)) {
+    if (!["EPUB", "MOBI", "AZW", "AZW3", "CBZ", "FB2", "FBZ"].includes(format)) {
       throw new Error(`不支持的文件格式: ${format}`);
     }
 
@@ -51,7 +51,9 @@ export async function uploadBook(file: File): Promise<SimpleBook> {
 
     const formattedTitle = formatTitle(metadata.title) || getFileNameWithoutExt(file.name);
     const formattedAuthor = formatAuthors(metadata.author) || "Unknown";
-    const primaryLanguage = getPrimaryLanguage(metadata.language) || "en";
+    const normalizedLanguage = normalizeLanguage(metadata.language);
+    metadata.language = normalizedLanguage;
+    const primaryLanguage = normalizedLanguage || "en";
 
     let coverTempFilePath: string | undefined;
     if (bookDoc) {
@@ -70,7 +72,7 @@ export async function uploadBook(file: File): Promise<SimpleBook> {
     }
 
     let derivedFiles: BookUploadData["derivedFiles"];
-    if (format === "MOBI" && bookDoc) {
+    if (["MOBI", "AZW", "AZW3"].includes(format) && bookDoc) {
       const derivedEpubPath = await createDerivedEpubFromBookDoc(bookDoc, {
         tempDirPath,
         bookHash,
@@ -109,7 +111,7 @@ export async function uploadBook(file: File): Promise<SimpleBook> {
   }
 }
 
-const DOCUMENT_LOADER_SUPPORTED_FORMATS: SimpleBook["format"][] = ["EPUB", "MOBI", "CBZ", "FB2", "FBZ"];
+const DOCUMENT_LOADER_SUPPORTED_FORMATS: SimpleBook["format"][] = ["EPUB", "MOBI", "AZW", "AZW3", "CBZ", "FB2", "FBZ"];
 
 function shouldParseWithDocumentLoader(format: SimpleBook["format"]): boolean {
   return DOCUMENT_LOADER_SUPPORTED_FORMATS.includes(format);
@@ -121,6 +123,21 @@ function getDefaultMetadata(fileName: string) {
     author: "Unknown",
     language: "en",
   };
+}
+
+function normalizeLanguage(language: BookDoc["metadata"]["language"], fallback = "en"): string {
+  const candidate = Array.isArray(language) ? language.find(isValidLanguageTag) : language;
+  return isValidLanguageTag(candidate) ? candidate! : fallback;
+}
+
+function isValidLanguageTag(tag: string | undefined | null): tag is string {
+  if (!tag) return false;
+  try {
+    Intl.getCanonicalLocales(tag);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function tryParseBookDocument(fileData: ArrayBuffer, fileName: string): Promise<BookDoc | null> {
@@ -438,6 +455,50 @@ export async function convertBookWithStatusUrls(book: BookWithStatus): Promise<B
   }
 }
 
+export async function loadReadableBookFile(
+  book: Pick<SimpleBook, "filePath" | "format">,
+  bookId: string,
+): Promise<File> {
+  const appDataDirPath = await appDataDir();
+  const candidates: Array<{ path: string; filename: string }> = [];
+
+  if (book.filePath) {
+    const formatKey = book.format as keyof typeof EXTS;
+    const defaultExt = EXTS[formatKey] ?? book.format.toLowerCase();
+    const originalFilename = book.filePath.split("/").pop() || `book.${defaultExt}`;
+    candidates.push({
+      path: book.filePath,
+      filename: originalFilename,
+    });
+  }
+
+  if (!candidates.length) {
+    throw new Error("书籍文件路径缺失");
+  }
+
+  for (const candidate of candidates) {
+    const absolutePath = candidate.path.startsWith("/")
+      ? candidate.path
+      : `${appDataDirPath}/${candidate.path}`;
+    try {
+      const fileUrl = convertFileSrc(absolutePath);
+      const response = await fetch(fileUrl);
+      if (!response.ok) {
+        continue;
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      return new File([arrayBuffer], candidate.filename, {
+        type: getFileMimeType(candidate.filename),
+      });
+    } catch (error) {
+      console.warn(`加载文件失败: ${candidate.path}`, error);
+      continue;
+    }
+  }
+
+  throw new Error("无法加载书籍文件");
+}
+
 export async function getBookWithStatusById(id: string): Promise<BookWithStatusAndUrls | null> {
   try {
     const bookWithStatus = await invoke<BookWithStatus | null>("get_book_with_status_by_id", { id });
@@ -638,6 +699,10 @@ function getBookFormat(fileName: string): SimpleBook["format"] {
       return "PDF";
     case "mobi":
       return "MOBI";
+    case "azw":
+      return "AZW";
+    case "azw3":
+      return "AZW3";
     case "cbz":
       return "CBZ";
     case "fb2":
@@ -658,6 +723,10 @@ export function getFileMimeType(fileName: string): string {
       return "application/pdf";
     case "mobi":
       return "application/x-mobipocket-ebook";
+    case "azw":
+      return "application/vnd.amazon.ebook";
+    case "azw3":
+      return "application/x-mobi8-ebook";
     case "cbz":
       return "application/vnd.comicbook+zip";
     case "fb2":
