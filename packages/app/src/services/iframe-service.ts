@@ -8,6 +8,7 @@ export interface ExplainTextEventDetail {
   question: string; // 对应的问题
   type: "explain" | "ask"; // 请求类型
   timestamp: number;
+  bookId?: string; // 关联的书籍ID
 }
 
 export interface ExplainTextEvent extends CustomEvent<ExplainTextEventDetail> {
@@ -32,8 +33,9 @@ class IframeService {
    * 发送解释文本请求
    * @param selectedText 选中的文本
    * @param type 请求类型
+   * @param bookId 关联的书籍ID
    */
-  public sendExplainTextRequest(selectedText: string, type: "explain" | "ask" = "explain"): void {
+  public sendExplainTextRequest(selectedText: string, type: "explain" | "ask" = "explain", bookId?: string): void {
     if (!selectedText || selectedText.trim().length === 0) {
       console.warn("⚠️ 尝试发送空的选中文本");
       return;
@@ -46,9 +48,8 @@ class IframeService {
       question,
       type,
       timestamp: Date.now(),
+      bookId,
     };
-
-    console.log("📤 发送解释文本请求:", eventDetail);
 
     // 派发自定义事件
     const event = new CustomEvent<ExplainTextEventDetail>("explainText", {
@@ -58,15 +59,15 @@ class IframeService {
     });
 
     window.dispatchEvent(event);
-    console.log("✅ 自定义事件已派发");
   }
 
   /**
    * 发送 AI 问答请求
    * @param selectedText 选中的文本
    * @param question 用户的问题
+   * @param bookId 关联的书籍ID
    */
-  public sendAskAIRequest(selectedText: string, question: string): void {
+  public sendAskAIRequest(selectedText: string, question: string, bookId?: string): void {
     if (!selectedText || selectedText.trim().length === 0) {
       console.warn("⚠️ 尝试发送空的选中文本");
       return;
@@ -82,9 +83,8 @@ class IframeService {
       question: question.trim(),
       type: "ask",
       timestamp: Date.now(),
+      bookId,
     };
-
-    console.log("📤 发送AI问答请求:", eventDetail);
 
     // 派发自定义事件
     const event = new CustomEvent<ExplainTextEventDetail>("explainText", {
@@ -94,7 +94,6 @@ class IframeService {
     });
 
     window.dispatchEvent(event);
-    console.log("✅ 自定义事件已派发");
   }
 
   /**

@@ -6,6 +6,7 @@ import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useLibraryStore } from "@/store/library-store";
 import type { Book, BookConfig, BookNote, BookProgress } from "@/types/book";
 import type { SessionStats } from "@/types/reading-session";
+import type { Thread } from "@/types/thread";
 import type { FoliateView } from "@/types/view";
 import { appDataDir } from "@tauri-apps/api/path";
 import { createStore } from "zustand";
@@ -33,6 +34,7 @@ export interface ReaderState {
   isSessionInitialized: boolean;
   activeContext: string | undefined;
   openDropdown: OpenDropdown;
+  currentThread: Thread | null;
 
   initBook: () => Promise<void>;
   setConfig: (config: BookConfig) => void;
@@ -47,6 +49,7 @@ export interface ReaderState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setOpenDropdown: (dropdown: OpenDropdown) => void;
+  setCurrentThread: (thread: Thread | null) => void;
 }
 
 export const createReaderStore = (bookId: string) => {
@@ -63,6 +66,7 @@ export const createReaderStore = (bookId: string) => {
     sessionStats: null,
     isSessionInitialized: false,
     openDropdown: null,
+    currentThread: null,
 
     initBook: async () => {
       try {
@@ -167,6 +171,7 @@ export const createReaderStore = (bookId: string) => {
     setError: (error) => set({ error }),
     setActiveContext: (context) => set({ activeContext: context }),
     setOpenDropdown: (dropdown) => set({ openDropdown: dropdown }),
+    setCurrentThread: (thread: Thread | null) => set({ currentThread: thread }),
   }));
 };
 

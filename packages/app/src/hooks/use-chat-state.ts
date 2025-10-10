@@ -15,7 +15,7 @@ import {
 import { type SelectedModel, useProviderStore } from "@/store/provider-store";
 import { useThreadStore } from "@/store/thread-store";
 import type { ChatReference, MessageMetadata } from "@/types/message";
-import type { ThreadSummary } from "@/types/thread";
+import type { Thread, ThreadSummary } from "@/types/thread";
 import type { UIMessage } from "ai";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -69,6 +69,8 @@ interface UseChatStateOptions {
   chatContext: ChatContext;
   setActiveBookId: (bookId: string) => void;
   setActiveContext: (context: string | undefined) => void;
+  currentThread?: Thread | null;
+  setCurrentThread?: (thread: Thread | null) => void;
 }
 
 export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
@@ -80,7 +82,9 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
   const [displayError, setDisplayError] = useState<Error | null>(null);
   const [references, setReferences] = useState<ChatReference[]>([]);
   const isInit = useRef(false);
-  const { currentThread, setCurrentThread } = useThreadStore();
+  const globalThreadStore = useThreadStore();
+  const currentThread = options.currentThread !== undefined ? options.currentThread : globalThreadStore.currentThread;
+  const setCurrentThread = options.setCurrentThread || globalThreadStore.setCurrentThread;
   const forceUpdate = useForceUpdate();
 
   const messagesRef = useRef<UIMessage[]>([]);
@@ -257,6 +261,7 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
 
   useTextEventHandler({
     sendMessage,
+    activeBookId,
   });
 
   const createReferenceId = useCallback(() => {

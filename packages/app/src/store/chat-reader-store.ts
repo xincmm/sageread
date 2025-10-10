@@ -3,6 +3,7 @@ import { DocumentLoader } from "@/lib/document";
 import { loadBookConfig } from "@/services/app-service";
 import { getBookWithStatusById } from "@/services/book-service";
 import type { Book, BookConfig } from "@/types/book";
+import type { Thread } from "@/types/thread";
 import { appDataDir } from "@tauri-apps/api/path";
 import { create } from "zustand";
 import { useAppSettingsStore } from "./app-settings-store";
@@ -24,11 +25,13 @@ interface ChatReaderStore {
   config: BookConfig | undefined;
   isLoading: boolean;
   error: string | null;
+  currentThread: Thread | null;
 
   setActiveBookId: (bookId: string | undefined) => void;
   setActiveContext: (context: string | undefined) => void;
   setLastBookId: (bookId: string | undefined) => void;
   setLastSemanticContext: (context: string | undefined) => void;
+  setCurrentThread: (thread: Thread | null) => void;
 }
 
 export const useChatReaderStore = create<ChatReaderStore>((set, get) => ({
@@ -40,6 +43,7 @@ export const useChatReaderStore = create<ChatReaderStore>((set, get) => ({
   config: undefined,
   isLoading: false,
   error: null,
+  currentThread: null,
 
   setActiveBookId: async (bookId: string | undefined) => {
     const currentBookId = get().activeBookId;
@@ -130,5 +134,9 @@ export const useChatReaderStore = create<ChatReaderStore>((set, get) => ({
 
   setLastSemanticContext: (context: string | undefined) => {
     set({ lastSemanticContext: context });
+  },
+
+  setCurrentThread: (thread: Thread | null) => {
+    set({ currentThread: thread });
   },
 }));

@@ -205,8 +205,8 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
   const handleExplain = useCallback(() => {
     if (!selection || !selection.text) return;
     setShowAnnotPopup(false);
-    iframeService.sendExplainTextRequest(selection.text);
-  }, [selection]);
+    iframeService.sendExplainTextRequest(selection.text, "explain", bookId);
+  }, [selection, bookId]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const handleAskAI = useCallback(() => {
@@ -247,10 +247,10 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
 
   const handleSendAIQuery = useCallback(
     (query: string, selectedText: string) => {
-      iframeService.sendAskAIRequest(selectedText, query);
+      iframeService.sendAskAIRequest(selectedText, query, bookId);
       handleDismissPopupAndSelection();
     },
-    [handleDismissPopupAndSelection],
+    [handleDismissPopupAndSelection, bookId],
   );
 
   // Popup 位置计算
