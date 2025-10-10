@@ -134,7 +134,10 @@
     ],
     "resources": [
       "resources/fonts/*"
-    ]
+    ],
+    "macOS": {
+      "signingIdentity": "Developer ID Application: jing wen (9T3JWFM3KT)"
+    }
   },
   "plugins": {
     "updater": {
