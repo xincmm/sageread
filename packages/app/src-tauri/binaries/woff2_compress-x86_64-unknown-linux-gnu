@@ -1,0 +1,56 @@
+#!/usr/bin/env node
+
+/**
+ * 使用 fonteditor-core 将 TTF 字体转换为 WOFF2。
+ * 作为 Tauri sidecar，在 Linux 平台上替代 woff2_compress 原生二进制。
+ */
+
+import fs from "node:fs";
+import path from "node:path";
+import process from "node:process";
+import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
+
+const { Font, woff2 } = require("fonteditor-core");
+
+async function main() {
+  const [, , inputPath] = process.argv;
+
+  if (!inputPath) {
+    console.error("用法: woff2_compress <字体路径>");
+    process.exit(1);
+  }
+
+  if (!fs.existsSync(inputPath)) {
+    console.error(`文件不存在: ${inputPath}`);
+    process.exit(1);
+  }
+
+  const ext = path.extname(inputPath).toLowerCase();
+  if (ext !== ".ttf") {
+    console.error("仅支持 .ttf 文件转换");
+    process.exit(1);
+  }
+
+  const outputPath = inputPath.replace(/\.ttf$/i, ".woff2");
+
+  try {
+    await woff2.init();
+    const fontBuffer = fs.readFileSync(inputPath);
+    const font = Font.create(fontBuffer, { type: "ttf", combinePath: true });
+    const woff2ArrayBuffer = font.write({ type: "woff2", hinting: true });
+    const woff2Buffer = Buffer.from(new Uint8Array(woff2ArrayBuffer));
+    fs.writeFileSync(outputPath, woff2Buffer);
+
+    process.exit(0);
+  } catch (error) {
+    console.error(`转换失败: ${error.message || error}`);
+    process.exit(1);
+  }
+}
+
+main();

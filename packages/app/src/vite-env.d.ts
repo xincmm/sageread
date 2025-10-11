@@ -45,6 +45,7 @@ declare module "foliate-js/pdf.js" {
   export function makePDF(file: File): Promise<any>;
 }
 
+
 declare module "foliate-js/mobi.js" {
   export function isMOBI(file: File): Promise<boolean>;
   export class MOBI {

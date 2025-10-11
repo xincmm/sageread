@@ -23,17 +23,75 @@ pub async fn save_book(app_handle: AppHandle, data: BookUploadData) -> Result<Si
 
     let epub_filename = format!("book.{}", data.format.to_lowercase());
     let epub_path = book_dir.join(&epub_filename);
-    std::fs::rename(&data.temp_file_path, &epub_path)
-        .map_err(|e| format!("移动书籍文件失败: {}", e))?;
+
+    if !data.temp_file_path.is_empty() {
+        match std::fs::rename(&data.temp_file_path, &epub_path) {
+            Ok(_) => {}
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+                log::warn!(
+                    "rename failed (missing source): {:?} -> {:?}, fallback to copy",
+                    data.temp_file_path,
+                    epub_path
+                );
+                if let Some(parent) = epub_path.parent() {
+                    fs::create_dir_all(parent)
+                        .map_err(|e| format!("创建书籍目录失败: {}", e))?;
+                }
+                std::fs::copy(&data.temp_file_path, &epub_path)
+                    .map_err(|e| format!("复制书籍文件失败: {}", e))?;
+            }
+            Err(err) => {
+                return Err(format!("移动书籍文件失败: {}", err));
+            }
+        }
+    }
 
     let cover_path = if let Some(cover_temp_path) = &data.cover_temp_file_path {
         let cover_file = book_dir.join("cover.jpg");
-        std::fs::rename(cover_temp_path, &cover_file)
-            .map_err(|e| format!("移动封面文件失败: {}", e))?;
+        match std::fs::rename(cover_temp_path, &cover_file) {
+            Ok(_) => {}
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+                log::warn!(
+                    "rename cover failed (missing source): {:?} -> {:?}, fallback to copy",
+                    cover_temp_path,
+                    cover_file
+                );
+                std::fs::copy(cover_temp_path, &cover_file)
+                    .map_err(|e| format!("复制封面文件失败: {}", e))?;
+            }
+            Err(err) => {
+                return Err(format!("移动封面文件失败: {}", err));
+            }
+        }
         Some(format!("books/{}/cover.jpg", data.id))
     } else {
         None
     };
+
+    if let Some(derived_files) = &data.derived_files {
+        for derived in derived_files {
+            let target_path = book_dir.join(&derived.filename);
+            if let Some(parent) = target_path.parent() {
+                fs::create_dir_all(parent).map_err(|e| format!("创建衍生文件目录失败: {}", e))?;
+            }
+
+            match std::fs::rename(&derived.temp_file_path, &target_path) {
+                Ok(_) => {}
+                Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+                    log::warn!(
+                        "rename derived failed (missing source): {:?} -> {:?}, fallback to copy",
+                        derived.temp_file_path,
+                        target_path
+                    );
+                    std::fs::copy(&derived.temp_file_path, &target_path)
+                        .map_err(|e| format!("复制衍生文件失败: {}", e))?;
+                }
+                Err(err) => {
+                    return Err(format!("移动衍生文件失败: {}", err));
+                }
+            }
+        }
+    }
 
     let metadata_path = book_dir.join("metadata.json");
     let metadata_json = serde_json::to_string_pretty(&data.metadata)

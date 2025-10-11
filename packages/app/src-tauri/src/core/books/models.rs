@@ -22,6 +22,13 @@ pub struct SimpleBook {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct DerivedFileUpload {
+    #[serde(rename = "tempFilePath")]
+    pub temp_file_path: String,
+    pub filename: String,
+}
+
+#[derive(Deserialize, Debug)]
 pub struct BookUploadData {
     pub id: String,
     pub title: String,
@@ -35,6 +42,8 @@ pub struct BookUploadData {
     #[serde(rename = "coverTempFilePath")]
     pub cover_temp_file_path: Option<String>,
     pub metadata: serde_json::Value,
+    #[serde(rename = "derivedFiles")]
+    pub derived_files: Option<Vec<DerivedFileUpload>>,
 }
 
 #[derive(Deserialize, Debug)]

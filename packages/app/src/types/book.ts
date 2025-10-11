@@ -1,4 +1,4 @@
-export type BookFormat = "EPUB" | "PDF" | "MOBI" | "CBZ" | "FB2" | "FBZ";
+export type BookFormat = "EPUB" | "PDF" | "MOBI" | "AZW" | "AZW3" | "CBZ" | "FB2" | "FBZ";
 export type BookNoteType = "bookmark" | "annotation" | "excerpt";
 export type HighlightStyle = "highlight" | "underline" | "squiggly";
 export type HighlightColor = "red" | "yellow" | "green" | "blue" | "violet";
