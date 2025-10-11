@@ -1,11 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Plus, RefreshCcw, Trash2, X } from "lucide-react";
+import { Pencil, Plus, RefreshCcw, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import ModelEditDialog from "./model-edit-dialog";
 import ModelFilter, { type ModelFilterOptions } from "./model-filter";
 
 interface ModelsManagementProps {
@@ -14,6 +13,7 @@ interface ModelsManagementProps {
   refreshError: string | null;
   onRefreshModels: () => void;
   onUpdateModel: (index: number, field: keyof Model, value: any) => void;
+  onEditModel: (index: number, updates: { id: string; name: string }) => void;
   onRemoveModel: (index: number) => void;
   onAddModel: (model: Omit<Model, "active" | "description" | "capabilities" | "manual">) => void;
   onClearAllModels: () => void;
@@ -25,12 +25,15 @@ export default function ModelsManagement({
   refreshError,
   onRefreshModels,
   onUpdateModel,
+  onEditModel,
   onRemoveModel,
   onAddModel,
   onClearAllModels,
 }: ModelsManagementProps) {
-  const [editingModelId, setEditingModelId] = useState<string | null>(null);
-  const [newModelData, setNewModelData] = useState({ id: "", name: "" });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
+  const [editModelIndex, setEditModelIndex] = useState<number | null>(null);
+  const [editModelData, setEditModelData] = useState<{ id: string; name: string } | undefined>(undefined);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [filters, setFilters] = useState<ModelFilterOptions>({
     searchTerm: "",
@@ -39,7 +42,12 @@ export default function ModelsManagement({
   const filteredModels = useMemo(() => {
     if (!provider?.models) return [];
 
-    return provider.models
+    const modelsWithIndex = provider.models.map((model, originalIndex) => ({
+      ...model,
+      originalIndex,
+    }));
+
+    return modelsWithIndex
       .filter((model) => {
         if (filters.searchTerm) {
           const searchLower = filters.searchTerm.toLowerCase();
@@ -50,39 +58,46 @@ export default function ModelsManagement({
 
         return true;
       })
-      .map((model) => ({
-        ...model,
-        originalIndex: provider.models.findIndex((m) => m.id === model.id),
-      }))
       .sort((a, b) => {
-        if (a.active && !b.active) return -1;
-        if (!a.active && b.active) return 1;
-        return a.id.localeCompare(b.id);
+        const activeDiff = Number(!!b.active) - Number(!!a.active);
+        if (activeDiff !== 0) return activeDiff;
+        return a.originalIndex - b.originalIndex;
       });
   }, [provider?.models, filters]);
 
   const addModel = () => {
-    const tempId = `temp-${Date.now()}`;
-    setEditingModelId(tempId);
-    setNewModelData({ id: "", name: "" });
+    setDialogMode("add");
+    setEditModelData(undefined);
+    setEditModelIndex(null);
+    setDialogOpen(true);
   };
 
-  const saveNewModel = () => {
-    if (!newModelData.id.trim()) return;
-
-    const newModel = {
-      id: newModelData.id.trim(),
-      name: newModelData.name.trim() || newModelData.id.trim(),
-    };
-
-    onAddModel(newModel);
-    setEditingModelId(null);
-    setNewModelData({ id: "", name: "" });
+  const openEditDialog = (originalIndex: number) => {
+    const target = provider.models[originalIndex];
+    if (!target) return;
+    setDialogMode("edit");
+    setEditModelIndex(originalIndex);
+    setEditModelData({
+      id: target.id,
+      name: target.name ?? "",
+    });
+    setDialogOpen(true);
   };
 
-  const cancelNewModel = () => {
-    setEditingModelId(null);
-    setNewModelData({ id: "", name: "" });
+  const closeDialog = () => {
+    setDialogOpen(false);
+    setDialogMode("add");
+    setEditModelIndex(null);
+    setEditModelData(undefined);
+  };
+
+  const handleSaveModel = (data: { id: string; name: string }) => {
+    if (dialogMode === "add") {
+      onAddModel(data);
+    } else if (editModelIndex !== null) {
+      onEditModel(editModelIndex, data);
+    }
+    closeDialog();
   };
 
   const handleClearAllModels = () => {
@@ -166,44 +181,13 @@ export default function ModelsManagement({
         />
       )}
 
-      {editingModelId && (
-        <div className="space-y-3 rounded-md border p-2 py-4">
-          <div className="flex items-center justify-between">
-            <span className="font-medium text-sm dark:text-neutral-200">添加新模型</span>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={saveNewModel} disabled={!newModelData.id.trim()} className="h-6 text-xs">
-                保存
-              </Button>
-              <Button size="sm" variant="ghost" onClick={cancelNewModel} className="h-6 text-xs">
-                取消
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">
-                模型ID <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                value={newModelData.id}
-                onChange={(e) => setNewModelData((prev) => ({ ...prev, id: e.target.value }))}
-                placeholder="gpt-4"
-                className="h-8 text-xs"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">显示名称</Label>
-              <Input
-                value={newModelData.name}
-                onChange={(e) => setNewModelData((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder="GPT-4"
-                className="h-8 text-xs"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <ModelEditDialog
+        open={dialogOpen}
+        mode={dialogMode}
+        initialData={editModelData}
+        onSave={handleSaveModel}
+        onCancel={closeDialog}
+      />
 
       <div className="space-y-3">
         {filteredModels.map((model, index) => (
@@ -216,35 +200,49 @@ export default function ModelsManagement({
           >
             <div className="flex items-center gap-3">
               <Switch
-                checked={model.active ?? true}
+                checked={model.active ?? false}
                 onCheckedChange={(checked) => onUpdateModel(model.originalIndex, "active", checked)}
               />
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm dark:text-neutral-200">{model.id}</span>
+                  <span className="break-all font-medium text-sm leading-tight dark:text-neutral-200">
+                    {model.name?.trim() || model.id}
+                  </span>
                   {model.manual && (
                     <span className="rounded bg-neutral-200 px-1 py-0.5 text-neutral-700 text-xs dark:bg-neutral-700 dark:text-neutral-300">
                       手动
                     </span>
                   )}
                 </div>
-                {model.name && model.name !== model.id && (
-                  <span className="text-neutral-500 text-xs dark:text-neutral-400">{model.name}</span>
+                {model.name && model.name.trim() !== model.id && (
+                  <span className="break-all text-neutral-500 text-xs leading-relaxed dark:text-neutral-400">
+                    {model.id}
+                  </span>
                 )}
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
-              onClick={() => onRemoveModel(model.originalIndex)}
-            >
-              <Trash2 className="size-3" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                onClick={() => openEditDialog(model.originalIndex)}
+              >
+                <Pencil className="size-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                onClick={() => onRemoveModel(model.originalIndex)}
+              >
+                <Trash2 className="size-3" />
+              </Button>
+            </div>
           </div>
         ))}
 
-        {(!provider?.models || filteredModels.length === 0) && !editingModelId && (
+        {(!provider?.models || filteredModels.length === 0) && !dialogOpen && (
           <div className="py-8 text-center text-neutral-500 text-sm dark:text-neutral-200">
             {!provider?.models || provider.models.length === 0
               ? '未配置模型。点击"添加模型"开始。'

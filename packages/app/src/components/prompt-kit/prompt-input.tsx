@@ -101,9 +101,18 @@ function PromptInputTextarea({ className, onKeyDown, disableAutosize = false, ..
   }, [value, maxHeight, disableAutosize]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const nativeEvent = e.nativeEvent as any;
+    const isComposing = Boolean(nativeEvent?.isComposing) || nativeEvent?.keyCode === 229;
+
     if (e.key === "Enter" && !e.shiftKey) {
+      if (isComposing) {
+        onKeyDown?.(e);
+        return;
+      }
       e.preventDefault();
       onSubmit?.();
+      onKeyDown?.(e);
+      return;
     }
     onKeyDown?.(e);
   };

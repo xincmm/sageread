@@ -15,7 +15,7 @@ interface ChatInputAreaProps {
 
   setInput: (value: string) => void;
   onRemoveReference: (id: string) => void;
-  onSubmit: () => void;
+  onSubmit: (promptOverride?: string) => Promise<void>;
   onStop: () => void;
   setActiveBookId: (bookId: string | undefined) => void;
 }
@@ -41,6 +41,12 @@ export function ChatInputArea({
 }: ChatInputAreaProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isChatPage = useIsChatPage();
+  const handleQuickPrompt = (prompt: string) => {
+    setInput(prompt);
+    if (status === "ready") {
+      void onSubmit(prompt);
+    }
+  };
 
   return (
     <div className="z-10 shrink-0 px-2 pr-0 pl-1.5">
@@ -53,7 +59,7 @@ export function ChatInputArea({
                   variant="soft"
                   className="h-7 cursor-pointer"
                   size="sm"
-                  onClick={() => setInput(prompt)}
+                  onClick={() => handleQuickPrompt(prompt)}
                 >
                   <Icon className="size-4" />
                   {!showToolDetail && <span className="text-xs">{label}</span>}
@@ -68,7 +74,9 @@ export function ChatInputArea({
           isLoading={status !== "ready"}
           value={input}
           onValueChange={setInput}
-          onSubmit={onSubmit}
+          onSubmit={() => {
+            void onSubmit();
+          }}
           className="relative z-10 w-full rounded-2xl border bg-background shadow-around dark:bg-neutral-800"
         >
           {isChatPage && (
@@ -81,7 +89,7 @@ export function ChatInputArea({
                       variant="soft"
                       className="h-7 cursor-pointer"
                       size="sm"
-                      onClick={() => setInput(prompt)}
+                      onClick={() => handleQuickPrompt(prompt)}
                     >
                       <Icon className="size-4" />
                       {!showToolDetail && <span className="text-xs">{label}</span>}
@@ -140,7 +148,13 @@ export function ChatInputArea({
               type="submit"
               size="icon"
               disabled={status === "ready" ? !input.trim() : status !== "submitted" && status !== "streaming"}
-              onClick={status === "ready" ? onSubmit : onStop}
+              onClick={() => {
+                if (status === "ready") {
+                  void onSubmit();
+                } else {
+                  onStop();
+                }
+              }}
               className="size-8 rounded-full"
             >
               {status === "ready" ? (
