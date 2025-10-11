@@ -45,7 +45,7 @@ export interface UseChatStateReturn {
   handleRemoveReference: (id: string) => void;
 
   // 消息处理
-  handleSubmit: () => Promise<void>;
+  handleSubmit: (promptOverride?: string) => Promise<void>;
   handleRetry: () => Promise<void>;
 
   // 线程管理
@@ -362,10 +362,11 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
     [selectedModel, setActiveContext],
   );
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(async (overrideInput?: string) => {
     if (status !== "ready") return;
 
-    const trimmedInput = input.trim();
+    const sourceInput = overrideInput ?? input;
+    const trimmedInput = sourceInput.trim();
     if (!trimmedInput) return;
 
     setDisplayError(null);
