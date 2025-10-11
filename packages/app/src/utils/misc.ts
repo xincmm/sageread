@@ -37,7 +37,8 @@ export const getLocale = () => {
 
 export const getUserLang = () => {
   const locale = getLocale();
-  return locale.split("-")[0] || "en";
+  const lang = locale.split("-")[0] || "en";
+  return isValidLanguageTag(lang) ? lang : "en";
 };
 
 export const getTargetLang = () => {
@@ -45,7 +46,17 @@ export const getTargetLang = () => {
   if (locale.startsWith("zh")) {
     return locale === "zh-Hant" || locale === "zh-HK" || locale === "zh-TW" ? "zh-Hant" : "zh-Hans";
   }
-  return locale.split("-")[0] || "en";
+  const lang = locale.split("-")[0] || "en";
+  return isValidLanguageTag(lang) ? lang : "en";
+};
+
+const isValidLanguageTag = (tag: string): boolean => {
+  try {
+    Intl.getCanonicalLocales(tag);
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 export const isCJKEnv = () => {

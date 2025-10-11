@@ -1,4 +1,5 @@
 use serde::Serialize;
+use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Emitter, Manager, Runtime, State};
 
 use crate::database::VectorDatabase;
@@ -13,6 +14,36 @@ use crate::models::{
 };
 use epub2mdbook::convert_epub_to_mdbook;
 
+fn find_epub_in_dir(dir: &Path) -> Option<PathBuf> {
+    let entries = std::fs::read_dir(dir).ok()?;
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .map(|ext| ext.eq_ignore_ascii_case("epub"))
+            .unwrap_or(false)
+        {
+            return Some(path);
+        }
+    }
+    None
+}
+
+fn resolve_epub_path(book_dir: &Path) -> Result<PathBuf, String> {
+    let default_path = book_dir.join("book.epub");
+    if default_path.exists() {
+        return Ok(default_path);
+    }
+    if let Some(candidate) = find_epub_in_dir(book_dir) {
+        return Ok(candidate);
+    }
+    Err(format!(
+        "EPUB not found under directory: {}",
+        book_dir.to_string_lossy()
+    ))
+}
+
 /// Parse an EPUB under $AppData/books/{book_id} and return basic metadata.
 #[tauri::command]
 pub async fn parse_epub<R: Runtime>(
@@ -25,7 +56,7 @@ pub async fn parse_epub<R: Runtime>(
     }
     let app_data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
     let book_dir = app_data_dir.join("books").join(&book_id);
-    let epub_path = book_dir.join("book.epub");
+    let epub_path = resolve_epub_path(&book_dir)?;
     let reader = EpubReader::new().map_err(|e| e.to_string())?;
     let content = reader.read_epub(&epub_path).map_err(|e| e.to_string())?;
     Ok(ParsedBook {
@@ -114,7 +145,7 @@ pub async fn convert_to_mdbook<R: Runtime>(
 
     let app_data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
     let book_dir = app_data_dir.join("books").join(&book_id);
-    let epub_path = book_dir.join("book.epub");
+    let epub_path = resolve_epub_path(&book_dir)?;
     let mdbook_dir = book_dir.join("mdbook");
 
     if !epub_path.exists() {

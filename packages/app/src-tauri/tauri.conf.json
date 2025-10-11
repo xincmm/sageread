@@ -120,7 +120,12 @@
       "assetProtocol": {
         "enable": true,
         "scope": [
-          "**"
+          "**",
+          "$RESOURCE/**",
+          "$APPDATA/**",
+          "$APPDATA",
+          "$CACHE/**",
+          "$TEMP/**"
         ]
       }
     }
