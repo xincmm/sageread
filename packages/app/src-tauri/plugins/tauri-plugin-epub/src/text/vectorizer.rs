@@ -7,15 +7,26 @@ use crate::models::VectorizerConfig;
 use crate::text::MAX_CHUNK_TOKENS;
 
 #[derive(Serialize)]
-struct EmbeddingRequest {
+struct OpenAIEmbeddingRequest {
     input: Vec<String>,
     model: String,
     encoding_format: String,
 }
 
+#[derive(Serialize)]
+struct OllamaEmbeddingRequest {
+    model: String,
+    input: String,
+}
+
 #[derive(Deserialize)]
-struct EmbeddingResponse {
+struct OpenAIEmbeddingResponse {
     data: Vec<EmbeddingData>,
+}
+
+#[derive(Deserialize)]
+struct OllamaEmbeddingResponse {
+    embeddings: Vec<Vec<f32>>,
 }
 
 #[derive(Deserialize)]
@@ -74,34 +85,69 @@ impl TextVectorizer {
             text.to_string()
         };
 
-        let request = EmbeddingRequest {
-            input: vec![processed_text],
-            model: self.model_name.clone(),
-            encoding_format: "float".to_string(),
-        };
+        // 判断是否为 Ollama API（根据 URL 结尾）
+        let is_ollama = self.embeddings_url.ends_with("/api/embed");
 
-        let mut req = self.client.post(&self.embeddings_url).header("Content-Type", "application/json").json(&request);
-        if let Some(k) = &self.api_key { req = req.header("Authorization", format!("Bearer {}", k)); }
+        let mut req = self.client
+            .post(&self.embeddings_url)
+            .header("Content-Type", "application/json");
+
+        if is_ollama {
+            // Ollama 格式：input 是字符串
+            let request = OllamaEmbeddingRequest {
+                model: self.model_name.clone(),
+                input: processed_text,
+            };
+            req = req.json(&request);
+        } else {
+            // OpenAI 格式：input 是数组
+            let request = OpenAIEmbeddingRequest {
+                input: vec![processed_text],
+                model: self.model_name.clone(),
+                encoding_format: "float".to_string(),
+            };
+            req = req.json(&request);
+        }
+
+        if let Some(k) = &self.api_key {
+            req = req.header("Authorization", format!("Bearer {}", k));
+        }
+
         let response = req
             .send()
             .await
-            .context("Failed to send request to local embedding API")?;
+            .context("Failed to send request to embedding API")?;
 
         if !response.status().is_success() {
             let error_text = response.text().await.unwrap_or_default();
-            anyhow::bail!("Local embedding API error: {}", error_text);
+            anyhow::bail!("Embedding API error: {}", error_text);
         }
 
-        let embedding_response: EmbeddingResponse = response
-            .json()
-            .await
-            .context("Failed to parse local embedding API response")?;
+        let embedding = if is_ollama {
+            // 解析 Ollama 响应
+            let embedding_response: OllamaEmbeddingResponse = response
+                .json()
+                .await
+                .context("Failed to parse Ollama embedding API response")?;
 
-        if embedding_response.data.is_empty() {
-            anyhow::bail!("No embeddings returned from local embedding API");
-        }
+            if embedding_response.embeddings.is_empty() {
+                anyhow::bail!("No embeddings returned from Ollama API");
+            }
 
-        let embedding = embedding_response.data[0].embedding.clone();
+            embedding_response.embeddings[0].clone()
+        } else {
+            // 解析 OpenAI 响应
+            let embedding_response: OpenAIEmbeddingResponse = response
+                .json()
+                .await
+                .context("Failed to parse OpenAI embedding API response")?;
+
+            if embedding_response.data.is_empty() {
+                anyhow::bail!("No embeddings returned from OpenAI API");
+            }
+
+            embedding_response.data[0].embedding.clone()
+        };
 
         // 首次调用时检测并缓存维度
         if self.embedding_dimension.is_none() {

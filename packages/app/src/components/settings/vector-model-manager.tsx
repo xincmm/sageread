@@ -119,6 +119,7 @@ export default function VectorModelManager() {
 
     try {
       const testUrl = normalizeEmbeddingsUrl(model.url);
+      const isOllama = testUrl.endsWith("/api/embed");
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -128,14 +129,21 @@ export default function VectorModelManager() {
         headers.Authorization = `Bearer ${model.apiKey}`;
       }
 
+      const requestBody = isOllama
+        ? {
+            model: model.modelId,
+            input: testText || "测试文本",
+          }
+        : {
+            input: [testText || "测试文本"],
+            model: model.modelId,
+            encoding_format: "float",
+          };
+
       const res = await fetch(testUrl, {
         method: "POST",
         headers,
-        body: JSON.stringify({
-          input: [testText || "测试文本"],
-          model: model.modelId,
-          encoding_format: "float",
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!res.ok) {
@@ -143,7 +151,9 @@ export default function VectorModelManager() {
       }
 
       const json = await res.json();
-      const len = json?.data?.[0]?.embedding?.length ?? 0;
+
+      const len = isOllama ? (json?.embeddings?.[0]?.length ?? 0) : (json?.data?.[0]?.embedding?.length ?? 0);
+
       updateVectorModel(model.id, { dimension: len });
       setTestResults((prev) => ({ ...prev, [model.id]: `连接成功 | 维度: ${len}` }));
     } catch (error) {
