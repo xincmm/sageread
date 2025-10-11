@@ -136,7 +136,7 @@ foliate-view {
   }
 
   .custom-resize-handle {
-    width: 4px;
+    width: 2px;
     height: 100%;
     cursor: col-resize;
     position: absolute;
@@ -148,7 +148,7 @@ foliate-view {
   }
 
   .custom-resize-handle-left {
-    width: 4px;
+    width: 2px;
     height: 100%;
     cursor: col-resize;
     position: absolute;
@@ -165,7 +165,7 @@ foliate-view {
     top: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 4px;
+    width: 2px;
     height: 100%;
     background-color: var(--color-gray-500);
     opacity: 0;

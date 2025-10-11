@@ -9,7 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { type SelectedModel, useProviderStore } from "@/store/provider-store";
-import { ChevronDown, Search } from "lucide-react";
+import { Check, ChevronDown, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { SVGProps } from "react";
 
@@ -103,7 +103,7 @@ export default function ModelSelector({ selectedModel, onModelSelect, className 
       <DropdownMenuTrigger asChild>
         <div
           className={cn(
-            "flex h-8 w-full min-w-0 cursor-pointer select-none items-center justify-between gap-2 rounded-2xl border bg-background px-3 font-normal text-sm dark:bg-neutral-800 dark:text-neutral-200 dark:hover:border-neutral-600 overflow-hidden",
+            "flex h-8 w-full min-w-0 cursor-pointer select-none items-center justify-between gap-2 overflow-hidden rounded-2xl border bg-background px-3 font-normal text-sm dark:bg-neutral-800 dark:text-neutral-200 dark:hover:border-neutral-600",
             className,
           )}
         >
@@ -158,22 +158,27 @@ export default function ModelSelector({ selectedModel, onModelSelect, className 
                   {models[0].providerName}
                 </div>
 
-                {models.map((model) => (
-                  <DropdownMenuItem
-                    key={`${model.providerId}-${model.modelId}`}
-                    className="cursor-pointer p-2 dark:hover:bg-neutral-700"
-                    onClick={() => handleModelSelect(model)}
-                  >
-                    <div className="flex flex-col gap-1 truncate" title={model.modelName}>
-                      <div className="font-medium text-xs dark:text-neutral-200 truncate">{model.modelName}</div>
-                      {model.modelName !== model.modelId && (
-                        <div className="truncate text-[10px] text-muted-foreground dark:text-neutral-400">
-                          {model.modelId}
-                        </div>
-                      )}
-                    </div>
-                  </DropdownMenuItem>
-                ))}
+                {models.map((model) => {
+                  const isSelected =
+                    selectedModel?.providerId === model.providerId && selectedModel?.modelId === model.modelId;
+                  return (
+                    <DropdownMenuItem
+                      key={`${model.providerId}-${model.modelId}`}
+                      className="cursor-pointer p-2 dark:hover:bg-neutral-700"
+                      onClick={() => handleModelSelect(model)}
+                    >
+                      <div className="flex flex-1 flex-col gap-1 truncate" title={model.modelName}>
+                        <div className="truncate font-medium text-xs dark:text-neutral-200">{model.modelName}</div>
+                        {model.modelName !== model.modelId && (
+                          <div className="truncate text-[10px] text-muted-foreground dark:text-neutral-400">
+                            {model.modelId}
+                          </div>
+                        )}
+                      </div>
+                      {isSelected && <Check className="h-4 w-4 flex-shrink-0 dark:text-neutral-200" />}
+                    </DropdownMenuItem>
+                  );
+                })}
 
                 <DropdownMenuSeparator />
               </div>

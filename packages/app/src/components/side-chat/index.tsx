@@ -90,8 +90,8 @@ function ChatContent({ bookId }: ChatContentProps) {
 
   const EmptyState = () => (
     <div className="flex h-full w-full flex-col overflow-y-auto p-2 pb-8">
-      <div className="flex flex-1 flex-col justify-start gap-3">
-        <div className="mb-4 flex flex-col items-start gap-4 pl-2">
+      <div className="flex flex-1 flex-col justify-end gap-3">
+        <div className="flex flex-col items-start gap-4 pl-2">
           <div className="rounded-full bg-muted/70 p-3 shadow-md dark:bg-neutral-800/90">
             <img className="size-8" src="https://www.notion.so/_assets/9ade71d75a1c0e93.png" alt="" />
           </div>
