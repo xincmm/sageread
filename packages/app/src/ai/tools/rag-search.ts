@@ -106,7 +106,6 @@ export const createRagSearchTool = (activeBookId: string | undefined) =>
           let processedContent = r.content;
           // md_file_path 现在存储的是绝对路径，可以直接用于图片路径解析
           if (r.md_file_path) {
-            console.log("r.md_file_path (absolute) =>", r.md_file_path);
             try {
               processedContent = await resolveMarkdownImagePaths(r.content, r.md_file_path);
             } catch (error) {

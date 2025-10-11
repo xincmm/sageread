@@ -22,6 +22,7 @@ import {
   mindmapTool,
   notesTool,
 } from "./tools";
+import { processQuoteMessages, selectValidMessages } from "./utils";
 
 export class CustomChatTransport implements ChatTransport<UIMessage> {
   private model: LanguageModel;
@@ -72,31 +73,8 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
     const chatContext = (requestBody as any)?.chatContext as ChatContext | undefined;
     const activeBookId = chatContext?.activeBookId;
 
-    const processedMessages = options.messages.map((message) => {
-      if (message.role === "user" && Array.isArray(message.parts)) {
-        const quoteParts = message.parts.filter((part: any) => part.type === "quote");
-        const textParts = message.parts.filter((part: any) => part.type === "text");
-
-        if (quoteParts.length > 0) {
-          const quotesText = quoteParts
-            .map((part: any, index: number) => {
-              const normalized = part.text.replace(/\s+$/g, "");
-              const quoted = normalized.replace(/\n/g, "\n> ");
-              return `${part.source || `引用${index + 1}`}：\n> ${quoted}`;
-            })
-            .join("\n\n");
-
-          const userText = textParts.map((part: any) => part.text).join("");
-          const combinedText = `${quotesText}\n\n${userText}`.trim();
-
-          return {
-            ...message,
-            parts: [{ type: "text", text: combinedText } as any],
-          } as UIMessage;
-        }
-      }
-      return message;
-    });
+    const processedMessages = processQuoteMessages(options.messages);
+    const selectedMessages = selectValidMessages(processedMessages, 8);
 
     const hasVectorCapability = useLlamaStore.getState().hasVectorCapability();
 
@@ -114,9 +92,14 @@ export class CustomChatTransport implements ChatTransport<UIMessage> {
       tools.ragContext = createRagContextTool(activeBookId);
     }
 
+    const convertedMessages = convertToModelMessages(selectedMessages, {
+      tools,
+      ignoreIncompleteToolCalls: true,
+    });
+
     const result = streamText({
       model: this.model,
-      messages: convertToModelMessages(processedMessages.slice(-6)),
+      messages: convertedMessages,
       abortSignal: options.abortSignal,
       toolChoice: "auto",
       stopWhen: stepCountIs(20),
