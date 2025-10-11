@@ -12,7 +12,7 @@ import { useTTSStore } from "@/store/tts-store";
 import { getReasoningTimes } from "@/types/message";
 import type { UIMessage, UIMessagePart } from "ai";
 import dayjs from "dayjs";
-import { Brain, Check, Copy, Loader2, Pause, Pencil, Quote, RefreshCw, Trash, Volume2 } from "lucide-react";
+import { Brain, Check, Copy, Loader2, Pause, Quote, RefreshCw, Volume2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useStickToBottomContext } from "use-stick-to-bottom";
@@ -472,6 +472,7 @@ export function ChatMessages({
                       </Button>
                     </MessageAction>
                   )}
+                  {/* TODO: 实现编辑功能
                   <MessageAction tooltip="编辑" delayDuration={100}>
                     <Button
                       variant="ghost"
@@ -481,6 +482,8 @@ export function ChatMessages({
                       <Pencil size={12} />
                     </Button>
                   </MessageAction>
+                  */}
+                  {/* TODO: 实现删除功能
                   <MessageAction tooltip="删除" delayDuration={100}>
                     <Button
                       variant="ghost"
@@ -490,6 +493,7 @@ export function ChatMessages({
                       <Trash size={12} />
                     </Button>
                   </MessageAction>
+                  */}
                   <MessageAction tooltip={copiedMessageIds.has(message.id) ? "已复制" : "复制"} delayDuration={100}>
                     <Button
                       variant="ghost"

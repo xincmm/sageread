@@ -32,7 +32,7 @@ import { memo, useRef, useState } from "react";
 interface EmptyStateProps {
   input: string;
   setInput: (value: string) => void;
-  handleSubmit: () => void;
+  handleSubmit: (promptOverride?: string) => Promise<void>;
   stop: () => void;
   status: string;
 }
@@ -118,7 +118,10 @@ const EmptyState = memo(({ input, setInput, handleSubmit, stop, status }: EmptyS
             {promptSuggestions.map(({ text, icon: Icon }) => (
               <div
                 key={text}
-                onClick={() => setInput(text)}
+                onClick={() => {
+                  setInput(text);
+                  handleSubmit(text);
+                }}
                 className="flex w-full cursor-pointer flex-col items-start rounded-xl bg-muted p-4 transition-all dark:border-neutral-700 dark:bg-neutral-800"
               >
                 <Icon className="size-5 flex-shrink-0 text-neutral-600 dark:text-neutral-300" />

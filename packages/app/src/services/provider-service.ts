@@ -15,15 +15,28 @@ export const fetchModelsFromProvider = async (provider: ModelProvider): Promise<
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
+    const isGemini = provider.provider === "gemini";
+
+    const trimmedBaseUrl = provider.baseUrl.replace(/\/+$/, "");
 
     // Only add authentication headers if API key is provided
     if (provider.apiKey) {
-      headers["x-api-key"] = provider.apiKey;
-      headers.Authorization = `Bearer ${provider.apiKey}`;
+      if (isGemini) {
+        headers["x-goog-api-key"] = provider.apiKey;
+      } else {
+        headers["x-api-key"] = provider.apiKey;
+        headers.Authorization = `Bearer ${provider.apiKey}`;
+      }
+    } else if (isGemini) {
+      throw new Error("Gemini provider requires an API key");
     }
 
     // Always use Tauri's fetch to avoid CORS issues
-    const response = await fetchTauri(`${provider.baseUrl}/models`, {
+    const modelsUrl = isGemini
+      ? `${/(\/v1(beta)?)$/.test(trimmedBaseUrl) ? trimmedBaseUrl : `${trimmedBaseUrl}/v1beta`}/models?key=${encodeURIComponent(provider.apiKey!)}`
+      : `${trimmedBaseUrl}/models`;
+
+    const response = await fetchTauri(modelsUrl, {
       method: "GET",
       headers,
     });
@@ -48,7 +61,14 @@ export const fetchModelsFromProvider = async (provider: ModelProvider): Promise<
     if (data.models && Array.isArray(data.models)) {
       // Alternative format: { models: [...] }
       return data.models
-        .map((model: string | { id: string }) => (typeof model === "string" ? model : model.id))
+        .map((model: any) => {
+          if (typeof model === "string") return model;
+          if (typeof model.id === "string") return model.id;
+          if (typeof model.name === "string") {
+            return model.name.replace(/^models\//, "");
+          }
+          return undefined;
+        })
         .filter(Boolean);
     }
 

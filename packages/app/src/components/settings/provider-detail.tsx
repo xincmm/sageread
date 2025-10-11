@@ -81,8 +81,52 @@ export default function ProviderDetailSettings({ providerId, onBack }: ProviderD
   };
 
   const handleUpdateModel = (index: number, field: keyof Model, value: any) => {
+    if (!provider) return;
+
+    const updatedModels = provider.models.map((model, i) => (i === index ? { ...model, [field]: value } : model));
+
+    let reorderedModels = updatedModels;
+
+    if (field === "active") {
+      const toggledModel = updatedModels[index];
+      if (!toggledModel) {
+        updateProvider(providerId, {
+          models: updatedModels,
+        });
+        return;
+      }
+
+      const remaining = updatedModels.filter((_, i) => i !== index);
+
+      if (value) {
+        reorderedModels = [toggledModel, ...remaining];
+      } else {
+        reorderedModels = [
+          ...remaining.filter((model) => !!model.active),
+          toggledModel,
+          ...remaining.filter((model) => !model.active),
+        ];
+      }
+    }
+
+    updateProvider(providerId, {
+      models: reorderedModels,
+    });
+  };
+
+  const handleEditModel = (index: number, updates: { id: string; name: string }) => {
     if (provider) {
-      const updatedModels = provider.models.map((model, i) => (i === index ? { ...model, [field]: value } : model));
+      const trimmedId = updates.id.trim();
+      const trimmedName = updates.name.trim();
+      const updatedModels = provider.models.map((model, i) =>
+        i === index
+          ? {
+              ...model,
+              id: trimmedId,
+              name: trimmedName || trimmedId,
+            }
+          : model,
+      );
       updateProvider(providerId, {
         models: updatedModels,
       });
@@ -113,18 +157,19 @@ export default function ProviderDetailSettings({ providerId, onBack }: ProviderD
         baseUrl: provider.baseUrl,
       });
 
-      const existingModelMap = new Map(provider.models.map((model) => [model.id, model.active ?? true]));
+      const existingModelMap = new Map(provider.models.map((model) => [model.id, model]));
 
-      const defaultActive = isCustomProvider ? false : providerId !== "openrouter";
-
-      const newModels: Model[] = modelIds.map((id) => ({
-        id,
-        name: id,
-        active: existingModelMap.has(id) ? existingModelMap.get(id)! : defaultActive,
-        description: "",
-        capabilities: [],
-        manual: false,
-      }));
+      const newModels: Model[] = modelIds.map((id) => {
+        const existing = existingModelMap.get(id);
+        return {
+          id,
+          name: existing?.name?.trim() || id,
+          active: existing?.active ?? false,
+          description: existing?.description ?? "",
+          capabilities: existing?.capabilities ?? [],
+          manual: false,
+        };
+      });
 
       const existingManualModels = provider.models.filter((model) => model.manual === true);
 
@@ -235,6 +280,7 @@ export default function ProviderDetailSettings({ providerId, onBack }: ProviderD
           refreshError={refreshError}
           onRefreshModels={handleRefreshModels}
           onUpdateModel={handleUpdateModel}
+          onEditModel={handleEditModel}
           onRemoveModel={handleRemoveModel}
           onAddModel={handleAddModel}
           onClearAllModels={handleClearAllModels}

@@ -90,8 +90,8 @@ function ChatContent({ bookId }: ChatContentProps) {
 
   const EmptyState = () => (
     <div className="flex h-full w-full flex-col overflow-y-auto p-2 pb-8">
-      <div className="flex flex-1 flex-col justify-end gap-2">
-        <div className="mb-4 flex flex-col items-start gap-4 pl-2">
+      <div className="flex flex-1 flex-col justify-end gap-3">
+        <div className="flex flex-col items-start gap-4 pl-2">
           <div className="rounded-full bg-muted/70 p-3 shadow-md dark:bg-neutral-800/90">
             <img className="size-8" src="https://www.notion.so/_assets/9ade71d75a1c0e93.png" alt="" />
           </div>
@@ -106,7 +106,10 @@ function ChatContent({ bookId }: ChatContentProps) {
           {promptSuggestions.map(({ text, icon: Icon, isNew }) => (
             <div
               key={text}
-              onClick={() => setInput(text)}
+              onClick={() => {
+                setInput(text);
+                void handleSubmit(text);
+              }}
               className="flex w-full cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/70 focus:outline-none focus:ring-2 focus:ring-primary/30 dark:hover:bg-neutral-800/80"
             >
               <span className="flex items-center gap-3 text-neutral-800 text-sm dark:text-neutral-200">
@@ -132,8 +135,12 @@ function ChatContent({ bookId }: ChatContentProps) {
     <main id="chat-sidebar" className="flex h-full flex-col overflow-hidden ">
       <div className="ml-1 flex-shrink-0 border-neutral-300 dark:border-neutral-700">
         <div className="flex h-8 items-center justify-between">
-          <div className="flex flex-1 items-center gap-2 pl-0.5">
-            <ModelSelector selectedModel={selectedModel} onModelSelect={setSelectedModel} className="z-40 max-w-80" />
+          <div className="flex items-center gap-2 pl-0.5">
+            <ModelSelector
+              selectedModel={selectedModel}
+              onModelSelect={setSelectedModel}
+              className="z-40 w-[12rem] flex-shrink-0"
+            />
           </div>
           <div className="flex items-center gap-0">
             <Button
