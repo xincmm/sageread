@@ -114,8 +114,8 @@ export default function NewLibraryPage() {
         </div>
       )}
 
-      <div className="flex h-[calc(100vh-60px)] flex-1 flex-col p-3">
-        <div className="mb-3 flex shrink-0 items-center justify-between">
+      <div className="flex h-[calc(100vh-60px)] flex-1 flex-col">
+        <div className="flex shrink-0 items-center justify-between px-3 pt-3">
           <h3 className="font-bold text-3xl dark:border-neutral-700">
             {selectedTagFromUrl === "all"
               ? "我的图书"
@@ -143,7 +143,7 @@ export default function NewLibraryPage() {
         )}
 
         {hasBooks ? (
-          <div className="flex-1 overflow-y-auto pb-8">
+          <div className="flex-1 overflow-y-auto p-3 pb-8">
             <div className="mx-auto">
               {searchQuery.trim() && (
                 <div className="mb-4 text-base-content/70 text-sm">
