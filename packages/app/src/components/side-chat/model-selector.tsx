@@ -103,18 +103,20 @@ export default function ModelSelector({ selectedModel, onModelSelect, className 
       <DropdownMenuTrigger asChild>
         <div
           className={cn(
-            "flex h-8 cursor-pointer select-none items-center justify-between gap-2 rounded-2xl border bg-background px-3 font-normal text-sm dark:bg-neutral-800 dark:text-neutral-200",
+            "flex h-8 w-full min-w-0 cursor-pointer select-none items-center justify-between gap-2 rounded-2xl border bg-background px-3 font-normal text-sm dark:bg-neutral-800 dark:text-neutral-200 dark:hover:border-neutral-600 overflow-hidden",
             className,
           )}
         >
-          <div className="flex items-center gap-2 truncate">
+          <div className="flex min-w-0 items-center gap-2 truncate">
             {selectedModel ? (
               <>
                 {(() => {
                   const IconComponent = getProviderIcon(selectedModel.providerId);
                   return IconComponent ? <IconComponent className="h-4 w-4 flex-shrink-0" /> : null;
                 })()}
-                <span className="truncate text-xs">{selectedModel.modelName}</span>
+                <span className="truncate text-xs" title={selectedModel.modelName}>
+                  {selectedModel.modelName}
+                </span>
               </>
             ) : (
               <span className="text-muted-foreground text-xs dark:text-neutral-400">选择模型</span>
@@ -162,8 +164,13 @@ export default function ModelSelector({ selectedModel, onModelSelect, className 
                     className="cursor-pointer p-2 dark:hover:bg-neutral-700"
                     onClick={() => handleModelSelect(model)}
                   >
-                    <div className="flex flex-col gap-1">
-                      <div className="font-medium text-xs dark:text-neutral-200">{model.modelId}</div>
+                    <div className="flex flex-col gap-1 truncate" title={model.modelName}>
+                      <div className="font-medium text-xs dark:text-neutral-200 truncate">{model.modelName}</div>
+                      {model.modelName !== model.modelId && (
+                        <div className="truncate text-[10px] text-muted-foreground dark:text-neutral-400">
+                          {model.modelId}
+                        </div>
+                      )}
                     </div>
                   </DropdownMenuItem>
                 ))}
