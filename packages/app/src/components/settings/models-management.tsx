@@ -1,12 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { Pencil, Plus, RefreshCcw, Trash2, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import ModelEditDialog from "./model-edit-dialog";
 import ModelFilter, { type ModelFilterOptions } from "./model-filter";
 
 interface ModelsManagementProps {
@@ -32,11 +30,10 @@ export default function ModelsManagement({
   onAddModel,
   onClearAllModels,
 }: ModelsManagementProps) {
-  const [editingModelId, setEditingModelId] = useState<string | null>(null);
-  const [newModelData, setNewModelData] = useState({ id: "", name: "" });
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
   const [editModelIndex, setEditModelIndex] = useState<number | null>(null);
-  const [editModelData, setEditModelData] = useState({ id: "", name: "" });
+  const [editModelData, setEditModelData] = useState<{ id: string; name: string } | undefined>(undefined);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [filters, setFilters] = useState<ModelFilterOptions>({
     searchTerm: "",
@@ -69,55 +66,38 @@ export default function ModelsManagement({
   }, [provider?.models, filters]);
 
   const addModel = () => {
-    const tempId = `temp-${Date.now()}`;
-    setEditingModelId(tempId);
-    setNewModelData({ id: "", name: "" });
+    setDialogMode("add");
+    setEditModelData(undefined);
+    setEditModelIndex(null);
+    setDialogOpen(true);
   };
 
   const openEditDialog = (originalIndex: number) => {
     const target = provider.models[originalIndex];
     if (!target) return;
+    setDialogMode("edit");
     setEditModelIndex(originalIndex);
     setEditModelData({
       id: target.id,
       name: target.name ?? "",
     });
-    setEditDialogOpen(true);
-    setEditingModelId(null);
+    setDialogOpen(true);
   };
 
-  const closeEditDialog = () => {
-    setEditDialogOpen(false);
+  const closeDialog = () => {
+    setDialogOpen(false);
+    setDialogMode("add");
     setEditModelIndex(null);
-    setEditModelData({ id: "", name: "" });
+    setEditModelData(undefined);
   };
 
-  const saveEditedModel = () => {
-    if (editModelIndex == null) return;
-    const trimmedId = editModelData.id.trim();
-    if (!trimmedId) return;
-    const trimmedName = editModelData.name.trim();
-
-    onEditModel(editModelIndex, { id: trimmedId, name: trimmedName || trimmedId });
-    closeEditDialog();
-  };
-
-  const saveNewModel = () => {
-    if (!newModelData.id.trim()) return;
-
-    const newModel = {
-      id: newModelData.id.trim(),
-      name: newModelData.name.trim() || newModelData.id.trim(),
-    };
-
-    onAddModel(newModel);
-    setEditingModelId(null);
-    setNewModelData({ id: "", name: "" });
-  };
-
-  const cancelNewModel = () => {
-    setEditingModelId(null);
-    setNewModelData({ id: "", name: "" });
+  const handleSaveModel = (data: { id: string; name: string }) => {
+    if (dialogMode === "add") {
+      onAddModel(data);
+    } else if (editModelIndex !== null) {
+      onEditModel(editModelIndex, data);
+    }
+    closeDialog();
   };
 
   const handleClearAllModels = () => {
@@ -201,44 +181,13 @@ export default function ModelsManagement({
         />
       )}
 
-      {editingModelId && (
-        <div className="space-y-3 rounded-md border p-2 py-4">
-          <div className="flex items-center justify-between">
-            <span className="font-medium text-sm dark:text-neutral-200">添加新模型</span>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={saveNewModel} disabled={!newModelData.id.trim()} className="h-6 text-xs">
-                保存
-              </Button>
-              <Button size="sm" variant="ghost" onClick={cancelNewModel} className="h-6 text-xs">
-                取消
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-xs">
-                模型ID <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                value={newModelData.id}
-                onChange={(e) => setNewModelData((prev) => ({ ...prev, id: e.target.value }))}
-                placeholder="gpt-4"
-                className="h-8 text-xs"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs">显示名称</Label>
-              <Input
-                value={newModelData.name}
-                onChange={(e) => setNewModelData((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder="GPT-4"
-                className="h-8 text-xs"
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <ModelEditDialog
+        open={dialogOpen}
+        mode={dialogMode}
+        initialData={editModelData}
+        onSave={handleSaveModel}
+        onCancel={closeDialog}
+      />
 
       <div className="space-y-3">
         {filteredModels.map((model, index) => (
@@ -256,7 +205,7 @@ export default function ModelsManagement({
               />
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm leading-tight dark:text-neutral-200 break-all">
+                  <span className="break-all font-medium text-sm leading-tight dark:text-neutral-200">
                     {model.name?.trim() || model.id}
                   </span>
                   {model.manual && (
@@ -293,7 +242,7 @@ export default function ModelsManagement({
           </div>
         ))}
 
-        {(!provider?.models || filteredModels.length === 0) && !editingModelId && (
+        {(!provider?.models || filteredModels.length === 0) && !dialogOpen && (
           <div className="py-8 text-center text-neutral-500 text-sm dark:text-neutral-200">
             {!provider?.models || provider.models.length === 0
               ? '未配置模型。点击"添加模型"开始。'
@@ -301,45 +250,6 @@ export default function ModelsManagement({
           </div>
         )}
       </div>
-
-      <Dialog open={editDialogOpen} onOpenChange={(open) => (open ? setEditDialogOpen(true) : closeEditDialog())}>
-        <DialogContent className="sm:max-w-[420px] overflow-hidden rounded-2xl border-neutral-200 bg-background p-0 shadow-xl dark:border-neutral-700 dark:bg-neutral-800">
-          <DialogHeader className="border-b px-5 py-4" showCloseButton>
-            <DialogTitle className="text-base font-semibold dark:text-neutral-100">编辑模型</DialogTitle>
-            <DialogDescription className="px-0 text-muted-foreground text-xs">
-              更新模型 ID 与显示名称，保持列表整洁一致。
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-5 px-5 py-5">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-neutral-600 dark:text-neutral-300">模型 ID</Label>
-              <Input
-                value={editModelData.id}
-                onChange={(e) => setEditModelData((prev) => ({ ...prev, id: e.target.value }))}
-                placeholder="gemini-1.5-flash"
-                className="h-9 text-sm"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-neutral-600 dark:text-neutral-300">显示名称</Label>
-              <Input
-                value={editModelData.name}
-                onChange={(e) => setEditModelData((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder="Gemini 1.5 Flash"
-                className="h-9 text-sm"
-              />
-            </div>
-          </div>
-          <DialogFooter className="border-t px-5 py-4">
-            <Button variant="outline" onClick={closeEditDialog} className="h-9 text-sm">
-              取消
-            </Button>
-            <Button onClick={saveEditedModel} disabled={!editModelData.id.trim()} className="h-9 text-sm">
-              保存
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -362,78 +362,81 @@ export function useChatState(options: UseChatStateOptions): UseChatStateReturn {
     [selectedModel, setActiveContext],
   );
 
-  const handleSubmit = useCallback(async (overrideInput?: string) => {
-    if (status !== "ready") return;
+  const handleSubmit = useCallback(
+    async (overrideInput?: string) => {
+      if (status !== "ready") return;
 
-    const sourceInput = overrideInput ?? input;
-    const trimmedInput = sourceInput.trim();
-    if (!trimmedInput) return;
+      const sourceInput = overrideInput ?? input;
+      const trimmedInput = sourceInput.trim();
+      if (!trimmedInput) return;
 
-    setDisplayError(null);
+      setDisplayError(null);
 
-    const referenceSnapshot = references.map((reference) => ({ ...reference }));
-    const messageParts = buildMessageParts(trimmedInput, referenceSnapshot);
+      const referenceSnapshot = references.map((reference) => ({ ...reference }));
+      const messageParts = buildMessageParts(trimmedInput, referenceSnapshot);
 
-    if (messages.length === 0 && !currentThread) {
-      try {
-        const titleSource = trimmedInput || referenceSnapshot[0]?.text || "新对话";
-        const thread = await createThread(activeBookId, titleSource.substring(0, 50), []);
-        setCurrentThread(thread);
-        console.log("Created new thread:", thread.id);
-      } catch (error) {
-        console.error("Failed to create thread:", error);
+      if (messages.length === 0 && !currentThread) {
+        try {
+          const titleSource = trimmedInput || referenceSnapshot[0]?.text || "新对话";
+          const thread = await createThread(activeBookId, titleSource.substring(0, 50), []);
+          setCurrentThread(thread);
+          console.log("Created new thread:", thread.id);
+        } catch (error) {
+          console.error("Failed to create thread:", error);
+        }
       }
-    }
 
-    setInput("");
-    setReferences([]);
+      setInput("");
+      setReferences([]);
 
-    try {
-      generateSemanticContextAsync(trimmedInput);
-      await sendMessage({ parts: messageParts });
-      setMessages((prev) => {
-        if (!Array.isArray(prev) || prev.length === 0) {
-          return prev;
-        }
-
-        const nextMessages = [...prev];
-
-        for (let i = nextMessages.length - 1; i >= 0; i--) {
-          const message = nextMessages[i];
-          if (message?.role !== "user") {
-            continue;
+      try {
+        generateSemanticContextAsync(trimmedInput);
+        await sendMessage({ parts: messageParts });
+        setMessages((prev) => {
+          if (!Array.isArray(prev) || prev.length === 0) {
+            return prev;
           }
-          const existingMetadata = (message.metadata as MessageMetadata) || {};
-          nextMessages[i] = {
-            ...message,
-            parts: messageParts,
-            metadata: {
-              ...existingMetadata,
-              references: referenceSnapshot,
-            } as MessageMetadata,
-          };
-          break;
-        }
 
-        messagesRef.current = nextMessages;
-        return nextMessages;
-      });
-    } catch (error) {
-      console.error("Failed to send message:", error);
-    }
-  }, [
-    status,
-    input,
-    references,
-    messages,
-    activeBookId,
-    currentThread,
-    buildMessageParts,
-    sendMessage,
-    setMessages,
-    setCurrentThread,
-    generateSemanticContextAsync,
-  ]);
+          const nextMessages = [...prev];
+
+          for (let i = nextMessages.length - 1; i >= 0; i--) {
+            const message = nextMessages[i];
+            if (message?.role !== "user") {
+              continue;
+            }
+            const existingMetadata = (message.metadata as MessageMetadata) || {};
+            nextMessages[i] = {
+              ...message,
+              parts: messageParts,
+              metadata: {
+                ...existingMetadata,
+                references: referenceSnapshot,
+              } as MessageMetadata,
+            };
+            break;
+          }
+
+          messagesRef.current = nextMessages;
+          return nextMessages;
+        });
+      } catch (error) {
+        console.error("Failed to send message:", error);
+      }
+    },
+    [
+      status,
+      input,
+      references,
+      messages,
+      activeBookId,
+      currentThread,
+      buildMessageParts,
+      sendMessage,
+      setMessages,
+      setCurrentThread,
+      generateSemanticContextAsync,
+    ],
+  );
 
   const handleNewThread = useCallback(() => {
     setCurrentThread(null);

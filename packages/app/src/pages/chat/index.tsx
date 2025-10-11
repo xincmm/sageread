@@ -62,9 +62,7 @@ const EmptyState = memo(({ input, setInput, handleSubmit, stop, status }: EmptyS
             isLoading={status !== "ready"}
             value={input}
             onValueChange={setInput}
-            onSubmit={() => {
-              void handleSubmit();
-            }}
+            onSubmit={handleSubmit}
             className="relative z-10 w-full rounded-2xl border bg-background shadow-around dark:bg-neutral-800"
           >
             <div className="flex items-center justify-between gap-2 pt-1">
@@ -97,7 +95,7 @@ const EmptyState = memo(({ input, setInput, handleSubmit, stop, status }: EmptyS
                 onClick={(e) => {
                   e.preventDefault();
                   if (status === "ready") {
-                    void handleSubmit();
+                    handleSubmit();
                   } else {
                     stop();
                   }
@@ -122,7 +120,7 @@ const EmptyState = memo(({ input, setInput, handleSubmit, stop, status }: EmptyS
                 key={text}
                 onClick={() => {
                   setInput(text);
-                  void handleSubmit(text);
+                  handleSubmit(text);
                 }}
                 className="flex w-full cursor-pointer flex-col items-start rounded-xl bg-muted p-4 transition-all dark:border-neutral-700 dark:bg-neutral-800"
               >

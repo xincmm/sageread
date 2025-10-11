@@ -139,7 +139,7 @@ function ChatContent({ bookId }: ChatContentProps) {
             <ModelSelector
               selectedModel={selectedModel}
               onModelSelect={setSelectedModel}
-              className="z-40 flex-shrink-0 w-[12rem]"
+              className="z-40 w-[12rem] flex-shrink-0"
             />
           </div>
           <div className="flex items-center gap-0">
