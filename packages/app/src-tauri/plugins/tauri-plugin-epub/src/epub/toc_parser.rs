@@ -23,11 +23,14 @@ pub fn parse_toc_content(content: &str) -> Result<Vec<TocNode>, String> {
         .find(|node| node.tag_name().name() == "navMap")
         .ok_or("navMap element not found")?;
     
+    // 使用可变计数器来生成 playOrder
+    let mut play_order_counter = 1u32;
+    
     // 解析所有顶层的 navPoint
     let nav_points: Vec<TocNode> = nav_map
         .children()
         .filter(|node| node.is_element() && node.tag_name().name() == "navPoint")
-        .map(parse_nav_point)
+        .map(|node| parse_nav_point(node, &mut play_order_counter))
         .collect::<Result<Vec<_>, _>>()?;
     
     Ok(nav_points)
@@ -42,18 +45,22 @@ fn strip_doctype(input: &str) -> String {
 }
 
 /// 递归解析 navPoint 节点
-fn parse_nav_point(node: Node) -> Result<TocNode, String> {
+fn parse_nav_point(node: Node, play_order_counter: &mut u32) -> Result<TocNode, String> {
     // 获取属性
     let id = node
         .attribute("id")
         .ok_or("navPoint missing id attribute")?
         .to_string();
     
+    // 尝试从属性获取 playOrder，如果不存在则使用计数器
     let play_order: u32 = node
         .attribute("playOrder")
-        .ok_or("navPoint missing playOrder attribute")?
-        .parse()
-        .map_err(|_| "Invalid playOrder value")?;
+        .and_then(|v| v.parse().ok())
+        .unwrap_or_else(|| {
+            let current = *play_order_counter;
+            *play_order_counter += 1;
+            current
+        });
     
     // 获取 navLabel 中的 text
     let title = node
@@ -80,7 +87,7 @@ fn parse_nav_point(node: Node) -> Result<TocNode, String> {
     let children: Vec<TocNode> = node
         .children()
         .filter(|child| child.is_element() && child.tag_name().name() == "navPoint")
-        .map(parse_nav_point)
+        .map(|child| parse_nav_point(child, play_order_counter))
         .collect::<Result<Vec<_>, _>>()?;
     
     Ok(TocNode {
