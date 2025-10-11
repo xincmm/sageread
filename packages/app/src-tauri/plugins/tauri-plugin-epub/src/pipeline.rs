@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 
 use crate::database::VectorDatabase;
 use crate::epub::EpubReader;
-use crate::text::TextVectorizer;
-use crate::epub::{parse_toc_file, find_toc_ncx_in_mdbook, flatten_toc};
+use crate::text::{TextVectorizer, MAX_CHUNK_TOKENS, MIN_CHUNK_TOKENS};
+use crate::epub::{parse_toc_file, find_toc_ncx_in_mdbook, parse_nav_md_file, find_nav_md_in_mdbook, flatten_toc};
 use crate::models::{
     DocumentChunk, EpubContent, ProcessOptions, ProcessReport, ProgressUpdate,
     ErrorStats, VectorizerConfig, BookMetadataFile, AuthorField, FlatTocNode
@@ -106,14 +106,26 @@ where
         log::info!("MDBook is up-to-date, skipping conversion");
     }
 
-    // Step 2: Parse and flatten TOC
+    // Step 2: Parse and flatten TOC (支持 nav.md 和 toc.ncx)
     log::info!("Parsing TOC structure...");
-    let toc_path = find_toc_ncx_in_mdbook(&mdbook_dir)
-        .context("TOC file (toc.ncx) not found in MDBook directory")?;
+    
+    // 优先查找 nav.md (EPUB 3)，找不到再找 toc.ncx (EPUB 2)
+    let toc_path = find_nav_md_in_mdbook(&mdbook_dir)
+        .or_else(|| find_toc_ncx_in_mdbook(&mdbook_dir))
+        .context("Neither nav.md nor toc.ncx found in MDBook directory")?;
 
     log::info!("Found TOC file at: {:?}", toc_path);
-    let toc_nodes = parse_toc_file(&toc_path)
-        .map_err(|e| anyhow::anyhow!("Failed to parse TOC file: {}", e))?;
+    
+    // 根据文件扩展名选择解析器
+    let toc_nodes = if toc_path.extension().and_then(|s| s.to_str()) == Some("md") {
+        log::info!("Using nav.md parser (EPUB 3)");
+        parse_nav_md_file(&toc_path)
+            .map_err(|e| anyhow::anyhow!("Failed to parse nav.md: {}", e))?
+    } else {
+        log::info!("Using toc.ncx parser (EPUB 2)");
+        parse_toc_file(&toc_path)
+            .map_err(|e| anyhow::anyhow!("Failed to parse toc.ncx: {}", e))?
+    };
 
     let flat_toc = flatten_toc(&toc_nodes);
     log::info!("TOC parsing completed: {} entries found", flat_toc.len());
@@ -243,7 +255,7 @@ where
         }
 
         // 使用 Markdown 感知分片（更稳定的结构边界）
-        let chunks = reader.chunk_md_file(&md_content, 50, 400);
+        let chunks = reader.chunk_md_file(&md_content, MIN_CHUNK_TOKENS, MAX_CHUNK_TOKENS);
         let total_chunks_in_file = chunks.len();
         if total_chunks_in_file == 0 {
             log::debug!("文件无有效分片: {}", md_src);

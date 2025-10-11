@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crate::text::TextTokenizer;
+use crate::text::{TextTokenizer, MAX_CHUNK_TOKENS, CHUNK_OVERLAP_RATIO};
 
 /// 文本分块器，负责将长文本分割成适合处理的小块
 pub struct TextChunker {
@@ -28,8 +28,8 @@ impl TextChunker {
         max_tokens: usize,
         _overlap: usize,
     ) -> Vec<String> {
-        let safe_max_tokens = max_tokens.min(256);
-        let overlap_tokens = (safe_max_tokens as f32 * 0.2) as usize;
+        let safe_max_tokens = max_tokens.min(MAX_CHUNK_TOKENS);
+        let overlap_tokens = (safe_max_tokens as f32 * CHUNK_OVERLAP_RATIO) as usize;
 
         let lines: Vec<&str> = text.lines().collect();
         let mut chunks = Vec::new();
@@ -116,7 +116,7 @@ impl TextChunker {
     /// 专门用于 Markdown 文件的智能分块方法
     /// 考虑 Markdown 格式特性：标题层级、段落边界、代码块等
     pub fn chunk_md_file(&self, md_content: &str, min_tokens: usize, max_tokens: usize) -> Vec<String> {
-        let safe_max_tokens = max_tokens.min(400);
+        let safe_max_tokens = max_tokens.min(MAX_CHUNK_TOKENS);
         
         // 首先尝试按 Markdown 结构分块
         if let Some(structured_chunks) = self.chunk_by_markdown_structure(md_content, min_tokens, safe_max_tokens) {
@@ -138,7 +138,7 @@ impl TextChunker {
         let mut chunks = Vec::new();
         let mut current_section = Vec::new();
         let mut current_tokens = 0;
-        let overlap_tokens = (max_tokens as f32 * 0.2) as usize;
+        let overlap_tokens = (max_tokens as f32 * CHUNK_OVERLAP_RATIO) as usize;
         
         for line in lines.iter() {
             let line = line.trim();
@@ -257,7 +257,7 @@ impl TextChunker {
                 let chunk_tokens = self.estimate_tokens(&chunk);
                 if chunk_tokens > max_tokens {
                     // 如果仍然超过限制，进行紧急分割
-                    log::warn!("检测到超长分片({} tokens)，进行紧急分割", chunk_tokens);
+                    // log::warn!("检测到超长分片({} tokens)，进行紧急分割", chunk_tokens);
                     self.emergency_split_chunk(&chunk, max_tokens)
                 } else {
                     vec![chunk]
@@ -448,7 +448,7 @@ impl TextChunker {
             return self.split_by_characters(line, max_tokens);
         }
 
-        let overlap_tokens = (max_tokens as f32 * 0.2) as usize;
+        let overlap_tokens = (max_tokens as f32 * CHUNK_OVERLAP_RATIO) as usize;
         let mut chunks: Vec<String> = Vec::new();
         let mut current_chunk: Vec<String> = Vec::new();
         let mut current_tokens: usize = 0;
@@ -528,7 +528,7 @@ impl TextChunker {
 
     /// 按字符数量分割文本（最后的手段）
     fn split_by_characters(&self, text: &str, max_tokens: usize) -> Vec<String> {
-        let overlap_chars = (max_tokens as f32 * 0.2 * 0.8) as usize; // 20%重叠，0.8是安全系数
+        let overlap_chars = (max_tokens as f32 * CHUNK_OVERLAP_RATIO * 0.8) as usize; // 20%重叠，0.8是安全系数
         self.split_by_characters_with_overlap(text, max_tokens, overlap_chars)
     }
 
@@ -540,7 +540,7 @@ impl TextChunker {
             return self.split_by_characters(chunk, max_tokens);
         }
         
-        let overlap_tokens = (max_tokens as f32 * 0.2) as usize; // 20%重叠
+        let overlap_tokens = (max_tokens as f32 * CHUNK_OVERLAP_RATIO) as usize;
         let mut result = Vec::new();
         let mut current_lines = Vec::new();
         let mut current_tokens = 0;

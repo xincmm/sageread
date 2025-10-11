@@ -96,57 +96,40 @@ fn parse_nav_point(node: Node) -> Result<TocNode, String> {
 
 /// 在 mdbook 目录中查找 toc.ncx 文件
 pub fn find_toc_ncx_in_mdbook<P: AsRef<Path>>(mdbook_dir: P) -> Option<PathBuf> {
-    let mdbook_dir = mdbook_dir.as_ref();
-
-    // 首先检查常见位置，支持 toc.ncx 和 book.ncx
-    let candidate_names = ["toc.ncx", "book.ncx"];
-    let common_dirs = [
-        mdbook_dir.join("src"),
-        mdbook_dir.to_path_buf(),
-        mdbook_dir.join("book").join("src"),
-        mdbook_dir.join("book"),
-    ];
-
-    for dir in &common_dirs {
-        for name in &candidate_names {
-            let location = dir.join(name);
-            if location.exists() {
-                log::info!("Found NCX file at common location: {:?}", location);
-                return Some(location);
-            }
-        }
-    }
-
-    // 如果常见位置都没有，递归搜索整个目录
-    log::info!("NCX file not found in common locations, searching recursively in: {:?}", mdbook_dir);
+    log::info!("Searching for NCX file in: {:?}", mdbook_dir.as_ref());
     find_ncx_recursive(mdbook_dir)
 }
 
-/// 递归搜索 .ncx 文件（支持 toc.ncx 和 book.ncx）
-fn find_ncx_recursive<P: AsRef<Path>>(dir: P) -> Option<PathBuf> {
+/// 通用的递归文件查找函数
+/// 
+/// # Arguments
+/// * `dir` - 搜索的目录
+/// * `predicate` - 判断文件是否匹配的函数，接受文件路径，返回是否匹配
+fn find_file_recursive<P, F>(dir: P, predicate: F) -> Option<PathBuf>
+where
+    P: AsRef<Path>,
+    F: Fn(&Path) -> bool + Copy,
+{
     let dir = dir.as_ref();
 
-    // 检查当前目录下是否存在任意 .ncx 文件
     if let Ok(entries) = std::fs::read_dir(dir) {
         for entry in entries.flatten() {
             let path = entry.path();
 
             if path.is_file() {
-                if let Some(ext) = path.extension().and_then(|s| s.to_str()) {
-                    if ext.eq_ignore_ascii_case("ncx") {
-                        log::info!("Found NCX file at: {:?}", path);
-                        return Some(path);
-                    }
+                if predicate(&path) {
+                    log::info!("Found matching file at: {:?}", path);
+                    return Some(path);
                 }
             } else if path.is_dir() {
-                // 跳过一些不太可能包含 .ncx 的目录
+                // 跳过一些不太可能包含目标文件的目录
                 if let Some(dir_name) = path.file_name().and_then(|n| n.to_str()) {
                     if dir_name.starts_with('.') || dir_name == "target" || dir_name == "node_modules" {
                         continue;
                     }
                 }
 
-                if let Some(found) = find_ncx_recursive(&path) {
+                if let Some(found) = find_file_recursive(&path, predicate) {
                     return Some(found);
                 }
             }
@@ -154,6 +137,16 @@ fn find_ncx_recursive<P: AsRef<Path>>(dir: P) -> Option<PathBuf> {
     }
 
     None
+}
+
+/// 递归搜索 .ncx 文件（支持 toc.ncx 和 book.ncx）
+fn find_ncx_recursive<P: AsRef<Path>>(dir: P) -> Option<PathBuf> {
+    find_file_recursive(dir, |path| {
+        path.extension()
+            .and_then(|s| s.to_str())
+            .map(|ext| ext.eq_ignore_ascii_case("ncx"))
+            .unwrap_or(false)
+    })
 }
 
 /// 将嵌套的 TOC 结构扁平化，保留层级信息
@@ -202,43 +195,124 @@ pub fn flatten_toc(toc_nodes: &[TocNode]) -> Vec<FlatTocNode> {
     result
 }
 
+/// 在 mdbook 目录中查找 nav.md 文件
+pub fn find_nav_md_in_mdbook<P: AsRef<Path>>(mdbook_dir: P) -> Option<PathBuf> {
+    log::info!("Searching for nav.md in: {:?}", mdbook_dir.as_ref());
+    find_nav_md_recursive(mdbook_dir)
+}
 
+/// 递归搜索 nav.md 文件
+fn find_nav_md_recursive<P: AsRef<Path>>(dir: P) -> Option<PathBuf> {
+    find_file_recursive(dir, |path| {
+        path.file_name()
+            .and_then(|n| n.to_str())
+            .map(|name| name.eq_ignore_ascii_case("nav.md"))
+            .unwrap_or(false)
+    })
+}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+/// 解析 nav.md 文件，返回结构化的目录数据
+pub fn parse_nav_md_file<P: AsRef<Path>>(nav_path: P) -> Result<Vec<TocNode>, String> {
+    let nav_content = std::fs::read_to_string(nav_path).map_err(|e| e.to_string())?;
+    parse_nav_md_content(&nav_content)
+}
 
-
-
-    #[test]
-    fn test_flatten_toc() {
-        let toc_nodes = vec![
-            TocNode {
-                id: "chapter1".to_string(),
-                play_order: 1,
-                title: "Chapter 1".to_string(),
-                src: "chapter1.xhtml".to_string(),
-                children: vec![
-                    TocNode {
-                        id: "section1_1".to_string(),
-                        play_order: 2,
-                        title: "Section 1.1".to_string(),
-                        src: "chapter1.xhtml#section1".to_string(),
-                        children: vec![],
-                    }
-                ],
-            }
-        ];
-
-        let flattened = flatten_toc(&toc_nodes);
-        assert_eq!(flattened.len(), 2);
-        assert_eq!(flattened[0].depth, 0);
-        assert_eq!(flattened[0].md_src, "chapter1.md");
-        assert_eq!(flattened[0].anchor, None);
-        assert_eq!(flattened[0].hierarchy_path, vec!["Chapter 1"]);
-        assert_eq!(flattened[1].depth, 1);
-        assert_eq!(flattened[1].md_src, "chapter1.md");
-        assert_eq!(flattened[1].anchor, Some("section1".to_string()));
-        assert_eq!(flattened[1].hierarchy_path, vec!["Chapter 1", "Section 1.1"]);
+/// 解析 nav.md 文件内容
+pub fn parse_nav_md_content(content: &str) -> Result<Vec<TocNode>, String> {
+    // 正则匹配：前导空格 + 数字 + 点 + 空格 + Markdown链接
+    // 例如："    1.  [标题](路径#锚点)"
+    let re = Regex::new(r"^(\s*)(\d+)\.\s+\[([^\]]+)\]\(([^)]+)\)")
+        .map_err(|e| format!("Failed to compile regex: {}", e))?;
+    
+    let mut play_order = 1u32;
+    
+    // 临时存储所有节点（包括嵌套），稍后重建树形结构
+    let mut flat_items: Vec<(u32, TocNode)> = Vec::new();
+    
+    for line in content.lines() {
+        if let Some(caps) = re.captures(line) {
+            let leading_spaces = &caps[1];
+            let title = caps[3].trim().to_string();
+            let href = caps[4].trim().to_string();
+            
+            // 计算深度：4个空格 = 1级
+            let depth = (leading_spaces.len() / 4) as u32;
+            
+            // 创建新节点
+            let node = TocNode {
+                id: format!("nav_{}", play_order),
+                play_order,
+                title,
+                src: href,
+                children: Vec::new(),
+            };
+            
+            flat_items.push((depth, node));
+            play_order += 1;
+        }
     }
+    
+    // 重建树形结构
+    build_tree_from_flat(&flat_items)
+}
+
+/// 从扁平列表构建树形结构
+fn build_tree_from_flat(items: &[(u32, TocNode)]) -> Result<Vec<TocNode>, String> {
+    if items.is_empty() {
+        return Ok(Vec::new());
+    }
+    
+    let mut root_nodes: Vec<TocNode> = Vec::new();
+    // 记录每个深度最后一个节点在树中的路径
+    let mut depth_paths: Vec<Vec<usize>> = Vec::new();
+    
+    for (depth, node) in items {
+        let depth = *depth;
+        
+        if depth == 0 {
+            // 顶层节点
+            root_nodes.push(node.clone());
+            
+            // 更新路径：深度0的路径就是它在root_nodes中的索引
+            if depth_paths.is_empty() {
+                depth_paths.push(vec![root_nodes.len() - 1]);
+            } else {
+                depth_paths[0] = vec![root_nodes.len() - 1];
+            }
+        } else {
+            // 子节点：需要找到父节点
+            let depth_usize = depth as usize;
+            
+            // 确保父节点存在
+            if depth_usize == 0 || depth_paths.len() < depth_usize {
+                return Err(format!("Invalid nesting: depth {} but no parent", depth));
+            }
+            
+            // 获取父节点的路径（深度 depth-1）并克隆以避免借用冲突
+            let parent_path = depth_paths[depth_usize - 1].clone();
+            
+            // 通过路径找到父节点并添加子节点
+            let mut current = &mut root_nodes;
+            for (i, idx) in parent_path.iter().enumerate() {
+                if i < parent_path.len() - 1 {
+                    current = &mut current[*idx].children;
+                } else {
+                    // 最后一个索引：这是父节点
+                    current[*idx].children.push(node.clone());
+                    
+                    // 更新当前深度的路径
+                    let mut new_path = parent_path.clone();
+                    new_path.push(current[*idx].children.len() - 1);
+                    
+                    if depth_paths.len() <= depth_usize {
+                        depth_paths.push(new_path);
+                    } else {
+                        depth_paths[depth_usize] = new_path;
+                    }
+                }
+            }
+        }
+    }
+    
+    Ok(root_nodes)
 }

@@ -36,6 +36,8 @@ function ChatContent({ bookId }: ChatContentProps) {
   const setActiveContext = useReaderStore((state) => state.setActiveContext)!;
   const progress = useReaderStore((state) => state.progress);
   const activeContext = useReaderStore((state) => state.activeContext)!;
+  const currentThread = useReaderStore((state) => state.currentThread);
+  const setCurrentThread = useReaderStore((state) => state.setCurrentThread)!;
 
   const {
     input,
@@ -44,7 +46,6 @@ function ChatContent({ bookId }: ChatContentProps) {
     showThreads,
     threadsKey,
     isInit,
-    currentThread,
     messages,
     status,
     selectedModel,
@@ -69,6 +70,8 @@ function ChatContent({ bookId }: ChatContentProps) {
     },
     setActiveBookId: () => {},
     setActiveContext: setActiveContext,
+    currentThread: currentThread,
+    setCurrentThread: setCurrentThread,
   });
 
   const handleViewToolDetail = (toolPart: any) => {

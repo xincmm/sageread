@@ -11,15 +11,7 @@ export function getModelIdFromFilename(filename: string): string {
 }
 
 export function normalizeEmbeddingsUrl(url: string): string {
-  let normalized = url.replace(/\/$/, "");
-  if (!normalized.endsWith("/embeddings")) {
-    if (normalized.endsWith("/v1")) {
-      normalized = `${normalized}/embeddings`;
-    } else {
-      normalized = `${normalized}/v1/embeddings`;
-    }
-  }
-  return normalized;
+  return url.replace(/\/$/, "");
 }
 
 export interface VectorModelConfig {
@@ -56,7 +48,7 @@ export async function getCurrentVectorModelConfig(): Promise<VectorModelConfig> 
   const dimension = presetModel?.dimension || 1024;
 
   return {
-    embeddingsUrl: normalizeEmbeddingsUrl(baseUrl),
+    embeddingsUrl: `${baseUrl}/v1/embeddings`,
     model,
     apiKey: null,
     dimension,

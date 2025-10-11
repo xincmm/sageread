@@ -140,7 +140,8 @@ function ChatPage() {
   const [toolDetail, setToolDetail] = useState<any>(null);
   const [showToolDetail, setShowToolDetail] = useState(false);
   const scrollContextRef = useRef<any>(null);
-  const { activeBookId, activeContext, setActiveBookId, setActiveContext } = useChatReaderStore();
+  const { activeBookId, activeContext, setActiveBookId, setActiveContext, currentThread, setCurrentThread } =
+    useChatReaderStore();
 
   const {
     input,
@@ -149,7 +150,6 @@ function ChatPage() {
     showThreads,
     threadsKey,
     isInit,
-    currentThread,
     messages,
     status,
     selectedModel,
@@ -173,6 +173,8 @@ function ChatPage() {
     },
     setActiveBookId,
     setActiveContext,
+    currentThread: currentThread,
+    setCurrentThread: setCurrentThread,
   });
 
   const handleViewToolDetail = (toolPart: any) => {
@@ -238,10 +240,10 @@ function ChatPage() {
       <div className="flex h-full w-full overflow-hidden">
         <Resizable
           defaultSize={{
-            width: "42%",
+            width: "40%",
             height: "100%",
           }}
-          minWidth={showToolDetail ? "42%" : "100%"}
+          minWidth={showToolDetail ? "30%" : "100%"}
           maxWidth={showToolDetail ? "70%" : "100%"}
           enable={{
             top: false,
@@ -331,6 +333,7 @@ function ChatPage() {
                       status={status}
                       activeBookId={activeBookId}
                       setActiveBookId={setActiveBookId}
+                      showToolDetail={showToolDetail}
                     />
                   </div>
                 </div>

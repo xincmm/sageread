@@ -11,6 +11,7 @@ interface ChatInputAreaProps {
   input: string;
   status: string;
   activeBookId: string | undefined;
+  showToolDetail?: boolean;
 
   setInput: (value: string) => void;
   onRemoveReference: (id: string) => void;
@@ -30,6 +31,7 @@ export function ChatInputArea({
   status,
   references,
   activeBookId,
+  showToolDetail = false,
 
   setActiveBookId,
   onRemoveReference,
@@ -46,16 +48,17 @@ export function ChatInputArea({
         <div className="flex items-center justify-between gap-2 py-2">
           <div className="flex flex-wrap items-center gap-2">
             {quickActions.map(({ label, icon: Icon, prompt }) => (
-              <Button
-                variant="soft"
-                className="h-7 cursor-pointer"
-                key={label}
-                size="sm"
-                onClick={() => setInput(prompt)}
-              >
-                <Icon className="size-4" />
-                <span className="text-xs">{label}</span>
-              </Button>
+              <PromptInputAction key={label} tooltip={label}>
+                <Button
+                  variant="soft"
+                  className="h-7 cursor-pointer"
+                  size="sm"
+                  onClick={() => setInput(prompt)}
+                >
+                  <Icon className="size-4" />
+                  {!showToolDetail && <span className="text-xs">{label}</span>}
+                </Button>
+              </PromptInputAction>
             ))}
           </div>
         </div>
@@ -73,16 +76,17 @@ export function ChatInputArea({
               <ContextPopover activeBookId={activeBookId} setActiveBookId={setActiveBookId} />
               <div className="flex flex-wrap items-center gap-2 ">
                 {quickActions.map(({ label, icon: Icon, prompt }) => (
-                  <Button
-                    variant="soft"
-                    className="h-7 cursor-pointer"
-                    key={label}
-                    size="sm"
-                    onClick={() => setInput(prompt)}
-                  >
-                    <Icon className="size-4" />
-                    <span className="text-xs">{label}</span>
-                  </Button>
+                  <PromptInputAction key={label} tooltip={label}>
+                    <Button
+                      variant="soft"
+                      className="h-7 cursor-pointer"
+                      size="sm"
+                      onClick={() => setInput(prompt)}
+                    >
+                      <Icon className="size-4" />
+                      {!showToolDetail && <span className="text-xs">{label}</span>}
+                    </Button>
+                  </PromptInputAction>
                 ))}
               </div>
             </div>

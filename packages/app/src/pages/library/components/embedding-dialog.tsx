@@ -4,6 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DocumentChunk, SearchItem } from "@/types/document";
 import { getCurrentVectorModelConfig } from "@/utils/model";
 import { invoke } from "@tauri-apps/api/core";
+import { openPath } from "@tauri-apps/plugin-opener";
+import { FolderOpen } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 interface EmbeddingDialogProps {
@@ -177,7 +179,7 @@ export default function EmbeddingDialog({ isOpen, onClose, bookId }: EmbeddingDi
                     if (e.key === "Enter") doVectorSearch();
                   }}
                   placeholder="输入查询文本…"
-                  className="h-9 flex-1 rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
+                  className="h-8 flex-1 rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
                 />
                 <Button onClick={doVectorSearch} disabled={loading || !query.trim()}>
                   {loading ? "搜索中…" : "搜索"}
@@ -216,21 +218,21 @@ export default function EmbeddingDialog({ isOpen, onClose, bookId }: EmbeddingDi
                   value={selectedChunkId || ""}
                   onChange={(e) => setSelectedChunkId(Number(e.target.value) || null)}
                   placeholder="分块ID"
-                  className="h-9 rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
+                  className="h-8 rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
                 />
                 <input
                   type="number"
                   value={prevCount}
                   onChange={(e) => setPrevCount(Number(e.target.value) || 0)}
                   placeholder="前N个"
-                  className="h-9 rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
+                  className="h-8 rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
                 />
                 <input
                   type="number"
                   value={nextCount}
                   onChange={(e) => setNextCount(Number(e.target.value) || 0)}
                   placeholder="后N个"
-                  className="h-9 rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
+                  className="h-8 rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
                 />
                 <Button onClick={getContext} disabled={loading || !selectedChunkId} className="col-span-2">
                   {loading ? "获取中…" : "获取上下文"}
@@ -251,7 +253,7 @@ export default function EmbeddingDialog({ isOpen, onClose, bookId }: EmbeddingDi
                   value={chapterTitle}
                   onChange={(e) => setChapterTitle(e.target.value)}
                   placeholder="输入章节标题或关键词 (支持精确匹配和模糊搜索)"
-                  className="h-9 flex-1 rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
+                  className="h-8 flex-1 rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
                 />
                 <Button onClick={getChapterChunks} disabled={loading || !chapterTitle.trim()}>
                   {loading ? "获取中…" : "获取章节分块"}
@@ -275,14 +277,14 @@ export default function EmbeddingDialog({ isOpen, onClose, bookId }: EmbeddingDi
                   value={startIndex}
                   onChange={(e) => setStartIndex(Number(e.target.value) || 0)}
                   placeholder="起始索引"
-                  className="h-9 rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
+                  className="h-8 rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
                 />
                 <input
                   type="number"
                   value={endIndex}
                   onChange={(e) => setEndIndex(Number(e.target.value) || 10)}
                   placeholder="结束索引"
-                  className="h-9 rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
+                  className="h-8 rounded border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-500 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100"
                 />
                 <Button onClick={getRangeChunks} disabled={loading} className="col-span-2">
                   {loading ? "获取中…" : "获取范围分块"}
@@ -306,6 +308,15 @@ export default function EmbeddingDialog({ isOpen, onClose, bookId }: EmbeddingDi
 
 // 分块显示组件
 function ChunkDisplay({ chunk }: { chunk: DocumentChunk }) {
+  const handleOpenFolder = async () => {
+    try {
+      const folderPath = chunk.md_file_path.substring(0, chunk.md_file_path.lastIndexOf("/"));
+      await openPath(folderPath);
+    } catch (error) {
+      console.error("Failed to open folder:", error);
+    }
+  };
+
   return (
     <div className="space-y-2 p-3">
       <div className="flex items-center justify-between text-sm">
@@ -313,15 +324,17 @@ function ChunkDisplay({ chunk }: { chunk: DocumentChunk }) {
           {chunk.related_chapter_titles}
         </span>
       </div>
-      <div className="flex gap-2 text-neutral-500 text-xs dark:text-neutral-400">
+      <div className="flex items-center gap-2 text-neutral-500 text-xs dark:text-neutral-400">
         <span>ID: {chunk.id}</span>
         <span>文件顺序: {chunk.file_order_in_book}</span>
         <span>全局: {chunk.global_chunk_index}</span>
         <span>
           文件内: {chunk.chunk_order_in_file + 1}/{chunk.total_chunks_in_file}
         </span>
-        <span>文件路径: {chunk.md_file_path}</span>
+        <span>文件地址:</span>
+        <FolderOpen onClick={handleOpenFolder} className="size-3" />
       </div>
+
       <div className="text-neutral-600 text-sm dark:text-neutral-300">{chunk.chunk_text}</div>
     </div>
   );
