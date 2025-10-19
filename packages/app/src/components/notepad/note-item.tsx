@@ -4,7 +4,7 @@ import { Menu } from "@tauri-apps/api/menu";
 import { LogicalPosition } from "@tauri-apps/api/window";
 import { ask } from "@tauri-apps/plugin-dialog";
 import dayjs from "dayjs";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNotepad } from "./hooks";
 import { NoteDetailDialog } from "./note-detail-dialog";
 
@@ -15,10 +15,15 @@ interface NoteItemProps {
 export const NoteItem = ({ note }: NoteItemProps) => {
   const { handleDeleteNote } = useNotepad();
   const [showDetail, setShowDetail] = useState(false);
+  const [currentNote, setCurrentNote] = useState(note);
+
+  useEffect(() => {
+    setCurrentNote(note);
+  }, [note]);
 
   const handleNativeDelete = useCallback(async () => {
     try {
-      const preview = note.content || "";
+      const preview = currentNote.content || "";
       const confirmed = await ask(
         `确定要删除这条笔记吗？\n\n"${preview.length > 50 ? `${preview.substring(0, 50)}...` : preview}"\n\n此操作无法撤销。`,
         {
@@ -28,12 +33,12 @@ export const NoteItem = ({ note }: NoteItemProps) => {
       );
 
       if (confirmed) {
-        await handleDeleteNote(note.id);
+        await handleDeleteNote(currentNote.id);
       }
     } catch (error) {
       console.error("删除笔记失败:", error);
     }
-  }, [note, handleDeleteNote]);
+  }, [currentNote, handleDeleteNote]);
 
   const handleClick = useCallback(() => {
     setShowDetail(true);
@@ -74,33 +79,38 @@ export const NoteItem = ({ note }: NoteItemProps) => {
       >
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1 space-y-2">
-            {note.title && (
+            {currentNote.title && (
               <QuoteBlock
                 className="bg-neutral-200/60 px-3 py-2 text-neutral-700 dark:bg-neutral-800/80 dark:text-neutral-200"
                 contentClassName="line-clamp-3"
               >
-                {note.title}
+                {currentNote.title}
               </QuoteBlock>
             )}
 
-            {note.content && (
+            {currentNote.content && (
               <p className="line-clamp-3 select-auto text-neutral-700 text-sm leading-5 dark:text-neutral-200">
-                {note.content}
+                {currentNote.content}
               </p>
             )}
 
-            {!note.title && !note.content && (
+            {!currentNote.title && !currentNote.content && (
               <p className="select-auto text-neutral-500 text-sm">暂无内容</p>
             )}
 
             <div className="text-neutral-800 text-xs dark:text-neutral-500">
-              {dayjs(note.createdAt).format("YYYY-MM-DD HH:mm:ss")}
+              {dayjs(currentNote.createdAt).format("YYYY-MM-DD HH:mm:ss")}
             </div>
           </div>
         </div>
       </div>
 
-      <NoteDetailDialog note={note} open={showDetail} onOpenChange={setShowDetail} />
+      <NoteDetailDialog
+        note={currentNote}
+        open={showDetail}
+        onOpenChange={setShowDetail}
+        onNoteUpdated={setCurrentNote}
+      />
     </>
   );
 };
