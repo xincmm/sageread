@@ -125,6 +125,8 @@ foliate-view {
     font-feature-settings: normal;
     -webkit-tap-highlight-color: transparent;
     font-family: var(--font-sans);
+    font-size: var(--app-font-size, 14px);
+    font-weight: var(--app-font-weight, 400);
     font-variation-settings: normal;
   }
 

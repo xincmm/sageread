@@ -28,6 +28,18 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 const SYSTEM_DEFAULT_VALUE = "__system__";
+const FONT_WEIGHT_OPTIONS = [300, 400, 500, 600, 700];
+const FONT_WEIGHT_LABELS: Record<number, string> = {
+  300: "Light",
+  400: "Regular",
+  500: "Medium",
+  600: "SemiBold",
+  700: "Bold",
+};
+const UI_FONT_SIZE_OPTIONS = [12, 14, 16, 18, 20];
+const READER_FONT_SIZE_OPTIONS = [12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
+
+const getWeightLabel = (weight: number) => FONT_WEIGHT_LABELS[weight] ?? String(weight);
 
 const formatPreviewStyle = (family: string) => ({
   fontFamily: family,
@@ -166,10 +178,32 @@ export default function FontManager() {
   }, [customFontOptions, readerFontQuery]);
 
   const uiFontValue = settings.uiFontFamily?.trim() || SYSTEM_DEFAULT_VALUE;
+  const uiFontSize = settings.uiFontSize ?? 14;
+  const uiFontWeight = settings.uiFontWeight ?? 400;
 
   const currentReaderFont = settings.globalViewSettings?.serifFont?.trim();
   const readerFontValue =
     readerFontOptions.find((opt) => opt.family === currentReaderFont)?.family || SYSTEM_DEFAULT_VALUE;
+  const readerFontSize = settings.globalViewSettings?.defaultFontSize ?? DEFAULT_BOOK_FONT.defaultFontSize;
+  const readerFontWeight = settings.globalViewSettings?.fontWeight ?? DEFAULT_BOOK_FONT.fontWeight;
+  const effectiveUiFontSizes = useMemo(() => {
+    if (UI_FONT_SIZE_OPTIONS.includes(uiFontSize)) {
+      return UI_FONT_SIZE_OPTIONS;
+    }
+    return Array.from(new Set([...UI_FONT_SIZE_OPTIONS, uiFontSize])).sort((a, b) => a - b);
+  }, [uiFontSize]);
+  const effectiveReaderFontSizes = useMemo(() => {
+    if (READER_FONT_SIZE_OPTIONS.includes(readerFontSize)) {
+      return READER_FONT_SIZE_OPTIONS;
+    }
+    return Array.from(new Set([...READER_FONT_SIZE_OPTIONS, readerFontSize])).sort((a, b) => a - b);
+  }, [readerFontSize]);
+  const effectiveFontWeights = useMemo(() => {
+    const weights = new Set(FONT_WEIGHT_OPTIONS);
+    weights.add(uiFontWeight);
+    weights.add(readerFontWeight);
+    return Array.from(weights).sort((a, b) => a - b);
+  }, [uiFontWeight, readerFontWeight]);
 
   const updateSettings = (updater: (current: typeof settings) => typeof settings) => {
     const { settings: currentSettings } = useAppSettingsStore.getState();
@@ -181,11 +215,11 @@ export default function FontManager() {
   const handleUiFontChange = (value: string) => {
     const selectedFont = value === SYSTEM_DEFAULT_VALUE ? "" : value;
     setUiFontQuery("");
-    updateSettings((current) => ({
+    const updated = updateSettings((current) => ({
       ...current,
       uiFontFamily: selectedFont,
     }));
-    applyUiFont(selectedFont || undefined);
+    applyUiFont(updated.uiFontFamily, updated.uiFontSize, updated.uiFontWeight);
   };
 
   const handleReaderFontChange = (value: string) => {
@@ -209,6 +243,50 @@ export default function FontManager() {
     if (updated.globalViewSettings.overrideFont) {
       toast.success(`阅读字体已切换为 ${targetFont}`);
     }
+  };
+
+  const handleUiFontSizeSelect = (value: string) => {
+    const numeric = Number.parseInt(value, 10);
+    if (Number.isNaN(numeric)) return;
+    const updated = updateSettings((current) => ({
+      ...current,
+      uiFontSize: numeric,
+    }));
+    applyUiFont(updated.uiFontFamily, updated.uiFontSize, updated.uiFontWeight);
+  };
+
+  const handleUiFontWeightSelect = (value: string) => {
+    const numeric = Number.parseInt(value, 10);
+    if (Number.isNaN(numeric)) return;
+    const updated = updateSettings((current) => ({
+      ...current,
+      uiFontWeight: numeric,
+    }));
+    applyUiFont(updated.uiFontFamily, updated.uiFontSize, updated.uiFontWeight);
+  };
+
+  const handleReaderFontSizeSelect = (value: string) => {
+    const numeric = Number.parseInt(value, 10);
+    if (Number.isNaN(numeric)) return;
+    updateSettings((current) => ({
+      ...current,
+      globalViewSettings: {
+        ...current.globalViewSettings,
+        defaultFontSize: numeric,
+      },
+    }));
+  };
+
+  const handleReaderFontWeightSelect = (value: string) => {
+    const numeric = Number.parseInt(value, 10);
+    if (Number.isNaN(numeric)) return;
+    updateSettings((current) => ({
+      ...current,
+      globalViewSettings: {
+        ...current.globalViewSettings,
+        fontWeight: numeric,
+      },
+    }));
   };
 
   return (
@@ -260,6 +338,42 @@ export default function FontManager() {
               </SelectContent>
             </Select>
           )}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400">字体大小</p>
+              <Select value={String(uiFontSize)} onValueChange={handleUiFontSizeSelect}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="选择字号" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {effectiveUiFontSizes.map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}px
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400">字体粗细</p>
+              <Select value={String(uiFontWeight)} onValueChange={handleUiFontWeightSelect}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="选择粗细" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {effectiveFontWeights.map((weight) => (
+                      <SelectItem key={weight} value={String(weight)}>
+                        {weight} · {getWeightLabel(weight)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-3 rounded-md border border-neutral-200/70 bg-background p-3 dark:border-neutral-800 dark:bg-neutral-900/40">
@@ -329,6 +443,42 @@ export default function FontManager() {
               </SelectContent>
             </Select>
           )}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400">字体大小</p>
+              <Select value={String(readerFontSize)} onValueChange={handleReaderFontSizeSelect}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="选择字号" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {effectiveReaderFontSizes.map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}px
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400">字体粗细</p>
+              <Select value={String(readerFontWeight)} onValueChange={handleReaderFontWeightSelect}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="选择粗细" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {effectiveFontWeights.map((weight) => (
+                      <SelectItem key={weight} value={String(weight)}>
+                        {weight} · {getWeightLabel(weight)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-4 rounded-md border border-neutral-200/70 bg-background p-3 dark:border-neutral-800 dark:bg-neutral-900/40">

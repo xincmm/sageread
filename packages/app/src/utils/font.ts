@@ -15,7 +15,21 @@ const quoteIfNeeded = (font: string) => {
   return /\s/.test(font) && !/^".*"$/.test(font) ? `"${font}"` : font;
 };
 
-export const applyUiFont = (fontFamily?: string | null) => {
+const normalizeFontSize = (value?: number | null) => {
+  if (typeof value !== "number" || Number.isNaN(value) || value <= 0) {
+    return null;
+  }
+  return `${value}px`;
+};
+
+const normalizeFontWeight = (value?: number | null) => {
+  if (typeof value !== "number" || Number.isNaN(value) || value <= 0) {
+    return null;
+  }
+  return `${Math.round(value)}`;
+};
+
+export const applyUiFont = (fontFamily?: string | null, fontSize?: number | null, fontWeight?: number | null) => {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   const sanitized = fontFamily?.trim();
@@ -23,22 +37,36 @@ export const applyUiFont = (fontFamily?: string | null) => {
   if (!sanitized) {
     root.style.removeProperty("--font-sans");
     root.style.removeProperty("--font-serif");
-    return;
+  } else {
+    const cssFont = quoteIfNeeded(sanitized);
+    const computedStyle = getComputedStyle(root);
+    const fallbackSans = computedStyle.getPropertyValue("--font-sans").trim() || SYSTEM_FONT_FALLBACK;
+    const fallbackSerif = computedStyle.getPropertyValue("--font-serif").trim() || DEFAULT_SERIF_FALLBACK;
+
+    root.style.setProperty("--font-sans", `${cssFont}, ${fallbackSans}`);
+    root.style.setProperty("--font-serif", `${cssFont}, ${fallbackSerif}`);
   }
 
-  const cssFont = quoteIfNeeded(sanitized);
-  const computedStyle = getComputedStyle(root);
-  const fallbackSans = computedStyle.getPropertyValue("--font-sans").trim() || SYSTEM_FONT_FALLBACK;
-  const fallbackSerif = computedStyle.getPropertyValue("--font-serif").trim() || DEFAULT_SERIF_FALLBACK;
+  const normalizedSize = normalizeFontSize(fontSize);
+  const normalizedWeight = normalizeFontWeight(fontWeight);
 
-  root.style.setProperty("--font-sans", `${cssFont}, ${fallbackSans}`);
-  root.style.setProperty("--font-serif", `${cssFont}, ${fallbackSerif}`);
+  if (normalizedSize) {
+    root.style.setProperty("--app-font-size", normalizedSize);
+  } else {
+    root.style.removeProperty("--app-font-size");
+  }
+
+  if (normalizedWeight) {
+    root.style.setProperty("--app-font-weight", normalizedWeight);
+  } else {
+    root.style.removeProperty("--app-font-weight");
+  }
 };
 
 export const applyUiFontFromSettings = () => {
   try {
     const { settings } = useAppSettingsStore.getState();
-    applyUiFont(settings.uiFontFamily);
+    applyUiFont(settings.uiFontFamily, settings.uiFontSize, settings.uiFontWeight);
   } catch (error) {
     console.error("[Font] Failed to apply UI font from settings:", error);
   }
@@ -46,9 +74,13 @@ export const applyUiFontFromSettings = () => {
 
 if (typeof window !== "undefined") {
   useAppSettingsStore.subscribe(
-    (state) => state.settings.uiFontFamily,
-    (fontFamily) => {
-      applyUiFont(fontFamily);
+    (state) => ({
+      fontFamily: state.settings.uiFontFamily,
+      fontSize: state.settings.uiFontSize,
+      fontWeight: state.settings.uiFontWeight,
+    }),
+    ({ fontFamily, fontSize, fontWeight }) => {
+      applyUiFont(fontFamily, fontSize, fontWeight);
     },
   );
 }

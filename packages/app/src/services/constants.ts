@@ -48,6 +48,8 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   lastSyncedAtConfigs: 0,
   lastSyncedAtNotes: 0,
   uiFontFamily: "",
+  uiFontSize: 14,
+  uiFontWeight: 400,
 };
 
 export const DEFAULT_READSETTINGS: ReadSettings = {
