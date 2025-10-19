@@ -24,7 +24,7 @@ const SettingsDropdown = () => {
   const { settings, setSettings } = useAppSettingsStore();
   const openDropdown = useReaderStore((state) => state.openDropdown);
   const setOpenDropdown = useReaderStore((state) => state.setOpenDropdown)!;
-  const { fonts: customFontList, loadFonts } = useFontStore();
+  const { fonts: customFontList, systemFonts, loadFonts, loadSystemFonts } = useFontStore();
 
   const globalViewSettings = settings.globalViewSettings;
   const view = store.getState().view;
@@ -45,11 +45,24 @@ const SettingsDropdown = () => {
     [customFontList],
   );
 
-  const allFonts = useMemo(() => [...CURATED_FONTS, ...customFonts], [customFonts]);
+  const systemFontOptions = useMemo(
+    () =>
+      systemFonts.map((font) => ({
+        id: `system-${font.family}`,
+        name: font.family,
+        serif: font.family,
+        sansSerif: font.family,
+        cjk: font.family,
+      })),
+    [systemFonts],
+  );
+
+  const allFonts = useMemo(() => [...CURATED_FONTS, ...systemFontOptions, ...customFonts], [customFonts, systemFontOptions]);
 
   useEffect(() => {
     loadFonts();
-  }, [loadFonts]);
+    loadSystemFonts();
+  }, [loadFonts, loadSystemFonts]);
 
   useEffect(() => {
     const currentFontExists = allFonts.some(

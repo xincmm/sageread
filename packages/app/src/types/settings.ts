@@ -45,4 +45,5 @@ export interface SystemSettings {
 
   globalReadSettings: ReadSettings;
   globalViewSettings: ViewSettings;
+  uiFontFamily?: string;
 }

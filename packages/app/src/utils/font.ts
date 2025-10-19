@@ -1,9 +1,57 @@
 import { listFonts } from "@/services/font-service";
+import { useAppSettingsStore } from "@/store/app-settings-store";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { appDataDir, resourceDir } from "@tauri-apps/api/path";
 import { isCJKEnv } from "./misc";
 
 let cachedBuiltInFontUrl: string | null = null;
+const SYSTEM_FONT_FALLBACK =
+  'system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"';
+const DEFAULT_SERIF_FALLBACK =
+  '"Geist", "Geist Fallback", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif';
+
+const quoteIfNeeded = (font: string) => {
+  if (!font) return font;
+  return /\s/.test(font) && !/^".*"$/.test(font) ? `"${font}"` : font;
+};
+
+export const applyUiFont = (fontFamily?: string | null) => {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  const sanitized = fontFamily?.trim();
+
+  if (!sanitized) {
+    root.style.removeProperty("--font-sans");
+    root.style.removeProperty("--font-serif");
+    return;
+  }
+
+  const cssFont = quoteIfNeeded(sanitized);
+  const computedStyle = getComputedStyle(root);
+  const fallbackSans = computedStyle.getPropertyValue("--font-sans").trim() || SYSTEM_FONT_FALLBACK;
+  const fallbackSerif = computedStyle.getPropertyValue("--font-serif").trim() || DEFAULT_SERIF_FALLBACK;
+
+  root.style.setProperty("--font-sans", `${cssFont}, ${fallbackSans}`);
+  root.style.setProperty("--font-serif", `${cssFont}, ${fallbackSerif}`);
+};
+
+export const applyUiFontFromSettings = () => {
+  try {
+    const { settings } = useAppSettingsStore.getState();
+    applyUiFont(settings.uiFontFamily);
+  } catch (error) {
+    console.error("[Font] Failed to apply UI font from settings:", error);
+  }
+};
+
+if (typeof window !== "undefined") {
+  useAppSettingsStore.subscribe(
+    (state) => state.settings.uiFontFamily,
+    (fontFamily) => {
+      applyUiFont(fontFamily);
+    },
+  );
+}
 
 const getBuiltInFontUrl = async (): Promise<string> => {
   if (cachedBuiltInFontUrl) {
@@ -110,6 +158,8 @@ export const mountFontsToMainApp = async () => {
       style.textContent = builtInFontFaces;
       document.head.appendChild(style);
     }
+
+    applyUiFontFromSettings();
   } catch (error) {
     console.error("[Font] Failed to load fonts to main app:", error);
   }

@@ -40,6 +40,7 @@ futures-util = "0.3"
 tauri-plugin-os = "2"
 tauri-plugin-shell = "2"
 tauri-plugin-updater = "2"
+fontdb = "0.11"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2"

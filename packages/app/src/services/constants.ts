@@ -47,6 +47,7 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   lastSyncedAtBooks: 0,
   lastSyncedAtConfigs: 0,
   lastSyncedAtNotes: 0,
+  uiFontFamily: "",
 };
 
 export const DEFAULT_READSETTINGS: ReadSettings = {

@@ -22,6 +22,12 @@ export interface FontMetadata {
 
 type FontMetadataMap = Record<string, FontMetadata>;
 
+export interface SystemFontInfo {
+  family: string;
+  isMonospace: boolean;
+  sources: string[];
+}
+
 const FONTS_DIR = "fonts";
 const FONTS_META_FILE = "fonts-meta.json";
 
@@ -248,5 +254,15 @@ export async function uploadFontData(file: File): Promise<FontInfo> {
   } catch (error) {
     console.error("[FontService] Failed to upload font via data:", error);
     throw error;
+  }
+}
+
+export async function listSystemFonts(): Promise<SystemFontInfo[]> {
+  try {
+    const fonts = await invoke<SystemFontInfo[]>("list_system_fonts");
+    return fonts;
+  } catch (error) {
+    console.error("[FontService] Failed to list system fonts:", error);
+    return [];
   }
 }
