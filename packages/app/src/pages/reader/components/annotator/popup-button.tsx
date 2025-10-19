@@ -1,7 +1,7 @@
 import type React from "react";
 
 interface PopupButtonProps {
-  label: string | undefined;
+  label?: string;
   Icon: React.ElementType;
   onClick: () => void;
   isVertical?: boolean;
@@ -17,12 +17,13 @@ const PopupButton: React.FC<PopupButtonProps> = ({ label, Icon, onClick, isVerti
     <div className="flex items-center justify-center">
       <button
         onClick={handleClick}
+        aria-label={label}
+        title={label}
         className={`flex cursor-pointer items-center justify-center gap-1 rounded p-0 transition-colors duration-200 hover:bg-neutral-100 dark:hover:bg-neutral-700 ${
           isVertical ? "h-auto w-6 flex-col px-0 py-1" : "h-6 min-w-6 px-1"
         }`}
       >
         <Icon size={16} />
-        {label && <span className="text-sm">{label}</span>}
         {shortcutKey && (
           <span className={`text-[10px] font-medium uppercase text-neutral-500 dark:text-neutral-400 ${isVertical ? "" : "leading-none"}`}>
             {shortcutKey}

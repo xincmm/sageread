@@ -8,7 +8,7 @@ import HighlightOptions from "./highlight-options";
 import PopupButton from "./popup-button";
 
 interface AnnotationMenuButton {
-  label: string | undefined;
+  label?: string;
   Icon: React.ElementType;
   onClick: () => void;
   shortcut?: string;
