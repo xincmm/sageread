@@ -1,10 +1,10 @@
-import { HIGHLIGHT_COLOR_HEX } from "@/services/constants";
+import { DEFAULT_READER_SHORTCUTS, HIGHLIGHT_COLOR_HEX } from "@/services/constants";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import type { BookNote } from "@/types/book";
 import { Overlayer } from "foliate-js/overlayer.js";
 import { NotebookPen } from "lucide-react";
 import type React from "react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { FiCopy, FiHelpCircle, FiMessageCircle } from "react-icons/fi";
 import { PiHighlighterFill } from "react-icons/pi";
 import { RiDeleteBinLine } from "react-icons/ri";
@@ -112,17 +112,74 @@ const Annotator: React.FC = () => {
   }, [showAnnotPopup, showAskAIPopup]);
 
   const selectionAnnotated = selection?.annotated;
-  const buttons = [
-    { label: "复制", Icon: FiCopy, onClick: handleCopy },
-    { label: "解释", Icon: FiHelpCircle, onClick: handleExplain },
-    { label: "询问AI", Icon: FiMessageCircle, onClick: handleAskAI },
-    {
-      label: undefined,
-      Icon: selectionAnnotated ? RiDeleteBinLine : PiHighlighterFill,
-      onClick: handleHighlight,
-    },
-    { label: undefined, Icon: NotebookPen, onClick: addNote },
-  ];
+  const readerShortcuts = useMemo(
+    () => ({ ...DEFAULT_READER_SHORTCUTS, ...(settings.readerShortcuts ?? {}) }),
+    [settings.readerShortcuts],
+  );
+
+  const buttons = useMemo(
+    () => [
+      { label: "复制", Icon: FiCopy, onClick: handleCopy, shortcut: readerShortcuts.copy },
+      { label: "解释", Icon: FiHelpCircle, onClick: handleExplain, shortcut: readerShortcuts.explain },
+      { label: "询问AI", Icon: FiMessageCircle, onClick: handleAskAI, shortcut: readerShortcuts.askAI },
+      {
+        label: undefined,
+        Icon: selectionAnnotated ? RiDeleteBinLine : PiHighlighterFill,
+        onClick: handleHighlight,
+        shortcut: readerShortcuts.toggleHighlight,
+      },
+      { label: undefined, Icon: NotebookPen, onClick: addNote, shortcut: readerShortcuts.addNote },
+    ],
+    [
+      readerShortcuts.copy,
+      readerShortcuts.explain,
+      readerShortcuts.askAI,
+      readerShortcuts.toggleHighlight,
+      readerShortcuts.addNote,
+      handleCopy,
+      handleExplain,
+      handleAskAI,
+      handleHighlight,
+      addNote,
+      selectionAnnotated,
+    ],
+  );
+
+  useEffect(() => {
+    if (!showAnnotPopup || showAskAIPopup) return;
+    if (!buttons.some((button) => button.shortcut)) return;
+
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+
+      const activeElement = document.activeElement as HTMLElement | null;
+      if (activeElement) {
+        const tagName = activeElement.tagName;
+        if (
+          tagName === "INPUT" ||
+          tagName === "TEXTAREA" ||
+          tagName === "SELECT" ||
+          activeElement.isContentEditable
+        ) {
+          return;
+        }
+      }
+
+      const key = event.key.toLowerCase();
+      const matchedButton = buttons.find(
+        (button) => button.shortcut && button.shortcut.toLowerCase() === key,
+      );
+
+      if (!matchedButton) return;
+
+      event.preventDefault();
+      matchedButton.onClick();
+    };
+
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  }, [buttons, showAnnotPopup, showAskAIPopup]);
 
   return (
     <div>

@@ -5,9 +5,10 @@ interface PopupButtonProps {
   Icon: React.ElementType;
   onClick: () => void;
   isVertical?: boolean;
+  shortcutKey?: string;
 }
 
-const PopupButton: React.FC<PopupButtonProps> = ({ label, Icon, onClick, isVertical = false }) => {
+const PopupButton: React.FC<PopupButtonProps> = ({ label, Icon, onClick, isVertical = false, shortcutKey }) => {
   const handleClick = () => {
     onClick();
   };
@@ -22,6 +23,11 @@ const PopupButton: React.FC<PopupButtonProps> = ({ label, Icon, onClick, isVerti
       >
         <Icon size={16} />
         {label && <span className="text-sm">{label}</span>}
+        {shortcutKey && (
+          <span className={`text-[10px] font-medium uppercase text-neutral-500 dark:text-neutral-400 ${isVertical ? "" : "leading-none"}`}>
+            {shortcutKey}
+          </span>
+        )}
       </button>
     </div>
   );
