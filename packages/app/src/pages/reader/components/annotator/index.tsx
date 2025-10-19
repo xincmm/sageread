@@ -153,7 +153,9 @@ const Annotator: React.FC = () => {
       if (event.defaultPrevented) return;
       if (event.altKey || event.ctrlKey || event.metaKey) return;
 
-      const activeElement = document.activeElement as HTMLElement | null;
+      const eventTarget = event.target as Node | null;
+      const activeDocument = eventTarget?.ownerDocument ?? document;
+      const activeElement = activeDocument.activeElement as HTMLElement | null;
       if (activeElement) {
         const tagName = activeElement.tagName;
         if (
@@ -177,9 +179,28 @@ const Annotator: React.FC = () => {
       matchedButton.onClick();
     };
 
-    window.addEventListener("keydown", handleShortcut);
-    return () => window.removeEventListener("keydown", handleShortcut);
-  }, [buttons, showAnnotPopup, showAskAIPopup]);
+    const listeners: Array<() => void> = [];
+    const attachedTargets = new Set<Window | Document>();
+    const addListener = (target: Window | Document | null | undefined) => {
+      if (!target || attachedTargets.has(target)) return;
+      attachedTargets.add(target);
+      target.addEventListener("keydown", handleShortcut);
+      listeners.push(() => target.removeEventListener("keydown", handleShortcut));
+    };
+
+    addListener(window);
+    addListener(document);
+
+    const ownerDocument = selection?.range?.startContainer?.ownerDocument ?? null;
+    addListener(ownerDocument);
+    if (ownerDocument?.defaultView && ownerDocument.defaultView !== window) {
+      addListener(ownerDocument.defaultView);
+    }
+
+    return () => {
+      listeners.forEach((dispose) => dispose());
+    };
+  }, [buttons, selection?.range, showAnnotPopup, showAskAIPopup]);
 
   return (
     <div>
