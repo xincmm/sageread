@@ -62,8 +62,9 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
     });
 
     manager.setViewSettingsCallback((updatedSettings: ViewSettings) => {
+      const { settings: currentSettings } = useAppSettingsStore.getState();
       setSettings({
-        ...settings,
+        ...currentSettings,
         globalViewSettings: updatedSettings,
       });
     });
@@ -91,8 +92,16 @@ export const useFoliateViewer = (bookId: string, bookDoc: BookDoc, config: BookC
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
-    const view = managerRef.current?.getView();
-    if (view?.renderer && isInitialized.current) {
+    if (!isInitialized.current) return;
+
+    const manager = managerRef.current;
+    const view = manager?.getView();
+
+    if (manager) {
+      manager.updateViewSettings(settings.globalViewSettings);
+    }
+
+    if (view?.renderer) {
       const styles = getStyles(settings.globalViewSettings, themeCode);
       view.renderer.setStyles?.(styles);
 

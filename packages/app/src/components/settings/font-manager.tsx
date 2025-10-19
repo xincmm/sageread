@@ -11,14 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useFontUpload } from "@/hooks/use-font-upload";
-import {
-  type FontInfo,
-  type SystemFontInfo,
-  deleteFont,
-  downloadFont,
-  setFontMetadata,
-} from "@/services/font-service";
 import { DEFAULT_BOOK_FONT } from "@/services/constants";
+import { type FontInfo, type SystemFontInfo, deleteFont, downloadFont, setFontMetadata } from "@/services/font-service";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useFontStore } from "@/store/font-store";
 import { applyUiFont } from "@/utils/font";
@@ -296,7 +290,7 @@ export default function FontManager() {
 
         <div className="space-y-3 rounded-md border border-neutral-200/70 bg-background p-3 dark:border-neutral-800 dark:bg-neutral-900/40">
           <div>
-            <p className="font-medium text-sm text-neutral-800 dark:text-neutral-100">应用字体</p>
+            <p className="font-medium text-neutral-800 text-sm dark:text-neutral-100">应用字体</p>
             <p className="text-neutral-500 text-xs dark:text-neutral-400">选择界面和系统使用的字体</p>
           </div>
           {isSystemLoading ? (
@@ -332,7 +326,9 @@ export default function FontManager() {
                       </SelectItem>
                     ))
                   ) : (
-                    <div className="py-6 text-center text-neutral-500 text-sm dark:text-neutral-400">未找到匹配字体</div>
+                    <div className="py-6 text-center text-neutral-500 text-sm dark:text-neutral-400">
+                      未找到匹配字体
+                    </div>
                   )}
                 </SelectGroup>
               </SelectContent>
@@ -340,7 +336,7 @@ export default function FontManager() {
           )}
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400">字体大小</p>
+              <p className="font-medium text-neutral-600 text-xs dark:text-neutral-400">字体大小</p>
               <Select value={String(uiFontSize)} onValueChange={handleUiFontSizeSelect}>
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="选择字号" />
@@ -357,7 +353,7 @@ export default function FontManager() {
               </Select>
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400">字体粗细</p>
+              <p className="font-medium text-neutral-600 text-xs dark:text-neutral-400">字体粗细</p>
               <Select value={String(uiFontWeight)} onValueChange={handleUiFontWeightSelect}>
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="选择粗细" />
@@ -378,7 +374,7 @@ export default function FontManager() {
 
         <div className="space-y-3 rounded-md border border-neutral-200/70 bg-background p-3 dark:border-neutral-800 dark:bg-neutral-900/40">
           <div>
-            <p className="font-medium text-sm text-neutral-800 dark:text-neutral-100">阅读默认字体</p>
+            <p className="font-medium text-neutral-800 text-sm dark:text-neutral-100">阅读默认字体</p>
             <p className="text-neutral-500 text-xs dark:text-neutral-400">设置阅读器使用的默认字体</p>
           </div>
           {isSystemLoading && readerFontOptions.length === 0 ? (
@@ -407,7 +403,7 @@ export default function FontManager() {
                   <SelectItem value={SYSTEM_DEFAULT_VALUE}>系统默认</SelectItem>
                   {readerFilteredSystemFonts.length > 0 ? (
                     <>
-                      <SelectLabel className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                      <SelectLabel className="mt-1 text-neutral-500 text-xs dark:text-neutral-400">
                         系统字体
                       </SelectLabel>
                       {readerFilteredSystemFonts.map((font) => (
@@ -424,7 +420,7 @@ export default function FontManager() {
                   ) : null}
                   {readerFilteredCustomFonts.length > 0 ? (
                     <>
-                      <SelectLabel className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+                      <SelectLabel className="mt-2 text-neutral-500 text-xs dark:text-neutral-400">
                         已安装字体
                       </SelectLabel>
                       {readerFilteredCustomFonts.map((font) => (
@@ -437,7 +433,9 @@ export default function FontManager() {
                     </>
                   ) : null}
                   {readerFilteredSystemFonts.length === 0 && readerFilteredCustomFonts.length === 0 ? (
-                    <div className="py-6 text-center text-neutral-500 text-sm dark:text-neutral-400">未找到匹配字体</div>
+                    <div className="py-6 text-center text-neutral-500 text-sm dark:text-neutral-400">
+                      未找到匹配字体
+                    </div>
                   ) : null}
                 </SelectGroup>
               </SelectContent>
@@ -445,7 +443,7 @@ export default function FontManager() {
           )}
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400">字体大小</p>
+              <p className="font-medium text-neutral-600 text-xs dark:text-neutral-400">字体大小</p>
               <Select value={String(readerFontSize)} onValueChange={handleReaderFontSizeSelect}>
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="选择字号" />
@@ -462,7 +460,7 @@ export default function FontManager() {
               </Select>
             </div>
             <div className="space-y-1">
-              <p className="text-xs font-medium text-neutral-600 dark:text-neutral-400">字体粗细</p>
+              <p className="font-medium text-neutral-600 text-xs dark:text-neutral-400">字体粗细</p>
               <Select value={String(readerFontWeight)} onValueChange={handleReaderFontWeightSelect}>
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="选择粗细" />
@@ -483,7 +481,7 @@ export default function FontManager() {
 
         <div className="space-y-4 rounded-md border border-neutral-200/70 bg-background p-3 dark:border-neutral-800 dark:bg-neutral-900/40">
           <div>
-            <p className="font-medium text-sm text-neutral-800 dark:text-neutral-100">安装自定义字体</p>
+            <p className="font-medium text-neutral-800 text-sm dark:text-neutral-100">安装自定义字体</p>
             <p className="text-neutral-500 text-xs dark:text-neutral-400">拖拽或粘贴字体文件，支持 .woff2 / .ttf</p>
           </div>
           <div
