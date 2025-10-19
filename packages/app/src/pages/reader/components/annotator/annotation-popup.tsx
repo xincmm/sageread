@@ -9,6 +9,7 @@ import PopupButton from "./popup-button";
 
 interface AnnotationMenuButton {
   label?: string;
+  tooltip?: string;
   Icon: React.ElementType;
   onClick: () => void;
   shortcut?: string;
@@ -175,6 +176,7 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
             <React.Fragment key={index}>
               <PopupButton
                 label={button.label}
+                tooltip={button.tooltip}
                 Icon={button.Icon}
                 onClick={button.onClick}
                 isVertical={isVertical}

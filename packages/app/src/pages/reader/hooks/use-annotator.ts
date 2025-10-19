@@ -1,9 +1,7 @@
-import { useNotepad } from "@/components/notepad/hooks";
 import { createBookNote, deleteBookNote, updateBookNote } from "@/services/book-note-service";
 import { iframeService } from "@/services/iframe-service";
 import { useAppSettingsStore } from "@/store/app-settings-store";
 import type { HighlightColor, HighlightStyle } from "@/types/book";
-import type { BookMeta } from "@/types/note";
 import { type Position, type TextSelection, getPopupPosition, getPosition } from "@/utils/sel";
 import { useQueryClient } from "@tanstack/react-query";
 import * as CFI from "foliate-js/epubcfi.js";
@@ -42,9 +40,7 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
   const config = useReaderStore((state) => state.config)!;
   const progress = useReaderStore((state) => state.progress)!;
   const view = useReaderStore((state) => state.view);
-  const bookData = useReaderStore((state) => state.bookData);
   const store = useReaderStoreApi();
-  const { handleCreateNote } = useNotepad();
   const queryClient = useQueryClient();
   const globalViewSettings = settings.globalViewSettings;
 
@@ -172,35 +168,6 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
     },
     [selection, config, view, settings, bookId, store, queryClient],
   );
-
-  const addNote = useCallback(async () => {
-    if (!selection || !selection.text) return;
-
-    try {
-      const content = selection.text.trim();
-      const title = content.length > 50 ? `${content.substring(0, 50)}...` : content;
-
-      if (!bookData?.book) {
-        toast.error("无法获取书籍信息");
-        return;
-      }
-
-      const bookMeta: BookMeta = {
-        title: bookData.book.title,
-        author: bookData.book.author,
-      };
-
-      await handleCreateNote({
-        bookId,
-        bookMeta,
-        title,
-        content,
-      });
-      toast.success("笔记已创建");
-    } catch (error) {
-      toast.error("创建笔记失败");
-    }
-  }, [selection, bookData, bookId, handleCreateNote]);
 
   const handleExplain = useCallback(() => {
     if (!selection || !selection.text) return;
@@ -331,7 +298,6 @@ export const useAnnotator = ({ bookId }: UseAnnotatorProps) => {
     handleDismissPopupAndSelection,
     handleCopy,
     handleHighlight,
-    addNote,
     handleExplain,
     handleAskAI,
     handleCloseAskAI,

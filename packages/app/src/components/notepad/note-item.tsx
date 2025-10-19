@@ -1,3 +1,4 @@
+import { QuoteBlock } from "@/components/ui/quote-block";
 import type { Note } from "@/types/note";
 import { Menu } from "@tauri-apps/api/menu";
 import { LogicalPosition } from "@tauri-apps/api/window";
@@ -72,12 +73,27 @@ export const NoteItem = ({ note }: NoteItemProps) => {
         onContextMenu={handleMenuClick}
       >
         <div className="flex items-start gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="line-clamp-3 select-auto text-neutral-700 text-sm dark:text-neutral-200">
-              {note.content || "暂无内容"}
-            </p>
+          <div className="min-w-0 flex-1 space-y-2">
+            {note.title && (
+              <QuoteBlock
+                className="bg-neutral-200/60 px-3 py-2 text-neutral-700 dark:bg-neutral-800/80 dark:text-neutral-200"
+                contentClassName="line-clamp-3"
+              >
+                {note.title}
+              </QuoteBlock>
+            )}
 
-            <div className="mt-1 text-neutral-800 text-xs dark:text-neutral-500">
+            {note.content && (
+              <p className="line-clamp-3 select-auto text-neutral-700 text-sm leading-5 dark:text-neutral-200">
+                {note.content}
+              </p>
+            )}
+
+            {!note.title && !note.content && (
+              <p className="select-auto text-neutral-500 text-sm">暂无内容</p>
+            )}
+
+            <div className="text-neutral-800 text-xs dark:text-neutral-500">
               {dayjs(note.createdAt).format("YYYY-MM-DD HH:mm:ss")}
             </div>
           </div>

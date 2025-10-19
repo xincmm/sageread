@@ -113,7 +113,7 @@ export const useNotepad = ({ bookId }: UseNotepadProps = {}) => {
   const transformNoteForDisplay = useCallback(
     (note: Note) => ({
       id: note.id,
-      preview: note.content || "",
+      preview: note.content || note.title || "",
       createdAt: new Date(note.createdAt),
     }),
     [],

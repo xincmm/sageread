@@ -52,22 +52,20 @@ export const ChatSelectionPopup = ({ selectedText, position, onClose, onAskAi, p
       if (!selectedText.trim()) return;
 
       try {
-        const content = selectedText.trim();
-        const title = content.length > 50 ? `${content.substring(0, 50)}...` : content;
+        const quote = selectedText.trim();
 
         let bookMeta = undefined;
         if (bookData?.book) {
           bookMeta = {
             title: bookData.book.title,
-            author: bookData.book.author,
+            author: bookData.book.author ?? "",
           };
         }
 
         await handleCreateNote({
           bookId: bookData?.id || undefined,
           bookMeta,
-          title,
-          content,
+          title: quote,
         });
         onClose();
       } catch (error) {
