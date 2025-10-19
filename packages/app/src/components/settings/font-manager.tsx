@@ -6,6 +6,7 @@ import {
   SelectGroup,
   SelectItem,
   SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -47,6 +48,8 @@ export default function FontManager() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [editingFont, setEditingFont] = useState<string | null>(null);
   const [editDisplayName, setEditDisplayName] = useState("");
+  const [uiFontQuery, setUiFontQuery] = useState("");
+  const [readerFontQuery, setReaderFontQuery] = useState("");
 
   useEffect(() => {
     loadFonts();
@@ -144,6 +147,24 @@ export default function FontManager() {
     [systemFontOptions, customFontOptions],
   );
 
+  const filteredSystemFonts = useMemo(() => {
+    if (!uiFontQuery.trim()) return systemFontOptions;
+    const lowered = uiFontQuery.trim().toLowerCase();
+    return systemFontOptions.filter((font) => font.label.toLowerCase().includes(lowered));
+  }, [systemFontOptions, uiFontQuery]);
+
+  const readerFilteredSystemFonts = useMemo(() => {
+    if (!readerFontQuery.trim()) return systemFontOptions;
+    const lowered = readerFontQuery.trim().toLowerCase();
+    return systemFontOptions.filter((font) => font.label.toLowerCase().includes(lowered));
+  }, [systemFontOptions, readerFontQuery]);
+
+  const readerFilteredCustomFonts = useMemo(() => {
+    if (!readerFontQuery.trim()) return customFontOptions;
+    const lowered = readerFontQuery.trim().toLowerCase();
+    return customFontOptions.filter((font) => font.label.toLowerCase().includes(lowered));
+  }, [customFontOptions, readerFontQuery]);
+
   const uiFontValue = settings.uiFontFamily?.trim() || SYSTEM_DEFAULT_VALUE;
 
   const currentReaderFont = settings.globalViewSettings?.serifFont?.trim();
@@ -159,6 +180,7 @@ export default function FontManager() {
 
   const handleUiFontChange = (value: string) => {
     const selectedFont = value === SYSTEM_DEFAULT_VALUE ? "" : value;
+    setUiFontQuery("");
     updateSettings((current) => ({
       ...current,
       uiFontFamily: selectedFont,
@@ -171,6 +193,7 @@ export default function FontManager() {
       value === SYSTEM_DEFAULT_VALUE
         ? DEFAULT_BOOK_FONT.serifFont
         : readerFontOptions.find((opt) => opt.family === value)?.family || DEFAULT_BOOK_FONT.serifFont;
+    setReaderFontQuery("");
 
     const updated = updateSettings((current) => ({
       ...current,
@@ -178,6 +201,7 @@ export default function FontManager() {
         ...current.globalViewSettings,
         serifFont: targetFont,
         sansSerifFont: targetFont,
+        monospaceFont: targetFont,
         defaultCJKFont: targetFont,
       },
     }));
@@ -209,15 +233,29 @@ export default function FontManager() {
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="max-h-72 overflow-y-auto">
+                <div className="sticky top-0 z-10 bg-popover p-2">
+                  <Input
+                    value={uiFontQuery}
+                    onChange={(event) => setUiFontQuery(event.target.value)}
+                    placeholder="搜索字体..."
+                    className="h-8"
+                    onKeyDown={(event) => event.stopPropagation()}
+                    onPointerDown={(event) => event.stopPropagation()}
+                  />
+                </div>
                 <SelectGroup>
                   <SelectItem value={SYSTEM_DEFAULT_VALUE}>系统默认</SelectItem>
-                  {systemFontOptions.map((font) => (
-                    <SelectItem key={font.id} value={font.family}>
-                      <span className="truncate" style={formatPreviewStyle(font.family)}>
-                        {font.label}
-                      </span>
-                    </SelectItem>
-                  ))}
+                  {filteredSystemFonts.length > 0 ? (
+                    filteredSystemFonts.map((font) => (
+                      <SelectItem key={font.id} value={font.family}>
+                        <span className="truncate" style={formatPreviewStyle(font.family)}>
+                          {font.label}
+                        </span>
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="py-6 text-center text-neutral-500 text-sm dark:text-neutral-400">未找到匹配字体</div>
+                  )}
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -241,22 +279,24 @@ export default function FontManager() {
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="max-h-80 overflow-y-auto">
+                <div className="sticky top-0 z-10 bg-popover p-2">
+                  <Input
+                    value={readerFontQuery}
+                    onChange={(event) => setReaderFontQuery(event.target.value)}
+                    placeholder="搜索字体..."
+                    className="h-8"
+                    onKeyDown={(event) => event.stopPropagation()}
+                    onPointerDown={(event) => event.stopPropagation()}
+                  />
+                </div>
                 <SelectGroup>
                   <SelectItem value={SYSTEM_DEFAULT_VALUE}>系统默认</SelectItem>
-                  <SelectLabel className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">系统字体</SelectLabel>
-                  {systemFontOptions.map((font) => (
-                    <SelectItem key={font.id} value={font.family}>
-                      <span className="truncate" style={formatPreviewStyle(font.family)}>
-                        {font.label}
-                      </span>
-                    </SelectItem>
-                  ))}
-                  {customFontOptions.length > 0 ? (
+                  {readerFilteredSystemFonts.length > 0 ? (
                     <>
-                      <SelectLabel className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-                        已安装字体
+                      <SelectLabel className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                        系统字体
                       </SelectLabel>
-                      {customFontOptions.map((font) => (
+                      {readerFilteredSystemFonts.map((font) => (
                         <SelectItem key={font.id} value={font.family}>
                           <span className="truncate" style={formatPreviewStyle(font.family)}>
                             {font.label}
@@ -264,6 +304,26 @@ export default function FontManager() {
                         </SelectItem>
                       ))}
                     </>
+                  ) : null}
+                  {readerFilteredCustomFonts.length > 0 && readerFilteredSystemFonts.length > 0 ? (
+                    <SelectSeparator />
+                  ) : null}
+                  {readerFilteredCustomFonts.length > 0 ? (
+                    <>
+                      <SelectLabel className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+                        已安装字体
+                      </SelectLabel>
+                      {readerFilteredCustomFonts.map((font) => (
+                        <SelectItem key={font.id} value={font.family}>
+                          <span className="truncate" style={formatPreviewStyle(font.family)}>
+                            {font.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </>
+                  ) : null}
+                  {readerFilteredSystemFonts.length === 0 && readerFilteredCustomFonts.length === 0 ? (
+                    <div className="py-6 text-center text-neutral-500 text-sm dark:text-neutral-400">未找到匹配字体</div>
                   ) : null}
                 </SelectGroup>
               </SelectContent>
