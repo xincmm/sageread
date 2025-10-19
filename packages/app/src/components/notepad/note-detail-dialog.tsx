@@ -1,7 +1,13 @@
 import { QuoteBlock } from "@/components/ui/quote-block";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { useNotepad } from "./hooks";
@@ -16,24 +22,26 @@ interface NoteDetailDialogProps {
   onNoteUpdated?: (note: Note) => void;
 }
 
-export function NoteDetailDialog({ note, open, onOpenChange, onNoteUpdated }: NoteDetailDialogProps) {
+export function NoteDetailDialog({
+  note,
+  open,
+  onOpenChange,
+  onNoteUpdated,
+}: NoteDetailDialogProps) {
   const { handleUpdateNote } = useNotepad({ bookId: note?.bookId });
-  const [quoteValue, setQuoteValue] = useState(note?.title ?? "");
   const [noteValue, setNoteValue] = useState(note?.content ?? "");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!note || !open) return;
-    setQuoteValue(note.title ?? "");
     setNoteValue(note.content ?? "");
   }, [note, open]);
 
   const hasChanges = useMemo(() => {
     if (!note) return false;
-    const originalQuote = note.title ?? "";
     const originalNote = note.content ?? "";
-    return quoteValue !== originalQuote || noteValue !== originalNote;
-  }, [note, quoteValue, noteValue]);
+    return noteValue !== originalNote;
+  }, [note, noteValue]);
 
   const handleSave = async () => {
     if (!note || !hasChanges) return;
@@ -41,7 +49,6 @@ export function NoteDetailDialog({ note, open, onOpenChange, onNoteUpdated }: No
       setSaving(true);
       const updatedNote = await handleUpdateNote({
         id: note.id,
-        title: quoteValue.trim().length > 0 ? quoteValue.trim() : null,
         content: noteValue.trim().length > 0 ? noteValue.trim() : null,
       });
 
@@ -80,23 +87,20 @@ export function NoteDetailDialog({ note, open, onOpenChange, onNoteUpdated }: No
         </DialogDescription>
         <ScrollArea className="max-h-[60vh] min-h-[200px] px-4 py-2">
           <div className="flex flex-col gap-4 pr-2">
-            <div className="space-y-2">
-              <Label htmlFor="note-quote">引用内容</Label>
-              <Textarea
-                id="note-quote"
-                value={quoteValue}
-                onChange={(event) => setQuoteValue(event.target.value)}
-                placeholder="引用的原文内容"
-                className="min-h-24 bg-neutral-200/50 text-sm dark:bg-neutral-800/60"
-              />
-              {quoteValue.trim().length > 0 && (
+            {note.title && (
+              <div className="space-y-2">
+                <span className="font-medium text-neutral-600 text-sm dark:text-neutral-300">
+                  引用内容
+                </span>
                 <QuoteBlock className="bg-neutral-200/60 px-3 py-2 text-neutral-700 dark:bg-neutral-800/70 dark:text-neutral-200">
-                  {quoteValue}
+                  {note.title}
                 </QuoteBlock>
-              )}
-            </div>
+              </div>
+            )}
             <div className="space-y-2">
-              <Label htmlFor="note-content">我的想法</Label>
+              <span className="font-medium text-neutral-600 text-sm dark:text-neutral-300">
+                我的想法
+              </span>
               <Textarea
                 id="note-content"
                 value={noteValue}
@@ -108,10 +112,19 @@ export function NoteDetailDialog({ note, open, onOpenChange, onNoteUpdated }: No
           </div>
         </ScrollArea>
         <DialogFooter>
-          <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={saving}
+          >
             取消
           </Button>
-          <Button type="button" onClick={handleSave} disabled={!hasChanges || saving}>
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={!hasChanges || saving}
+          >
             {saving ? "保存中..." : "保存修改"}
           </Button>
         </DialogFooter>
