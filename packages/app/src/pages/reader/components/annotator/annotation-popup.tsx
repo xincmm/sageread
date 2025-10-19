@@ -7,10 +7,18 @@ import React, { useEffect, useMemo, useState } from "react";
 import HighlightOptions from "./highlight-options";
 import PopupButton from "./popup-button";
 
+interface AnnotationMenuButton {
+  label?: string;
+  tooltip?: string;
+  Icon: React.ElementType;
+  onClick: () => void;
+  shortcut?: string;
+}
+
 interface AnnotationPopupProps {
   dir: "ltr" | "rtl";
   isVertical: boolean;
-  buttons: Array<{ label: string | undefined; Icon: React.ElementType; onClick: () => void }>;
+  buttons: AnnotationMenuButton[];
   position: Position;
   trianglePosition: Position;
   highlightOptionsVisible: boolean;
@@ -166,7 +174,14 @@ const AnnotationPopup: React.FC<AnnotationPopupProps> = ({
         >
           {buttons.map((button, index) => (
             <React.Fragment key={index}>
-              <PopupButton label={button.label} Icon={button.Icon} onClick={button.onClick} isVertical={isVertical} />
+              <PopupButton
+                label={button.label}
+                tooltip={button.tooltip}
+                Icon={button.Icon}
+                onClick={button.onClick}
+                isVertical={isVertical}
+                shortcutKey={button.shortcut?.toUpperCase()}
+              />
               {index === 2 && (
                 <Separator
                   orientation={isVertical ? "horizontal" : "vertical"}

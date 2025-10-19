@@ -1,23 +1,66 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useFontUpload } from "@/hooks/use-font-upload";
-import { type FontInfo, deleteFont, downloadFont, setFontMetadata } from "@/services/font-service";
+import { DEFAULT_BOOK_FONT } from "@/services/constants";
+import { type FontInfo, type SystemFontInfo, deleteFont, downloadFont, setFontMetadata } from "@/services/font-service";
+import { useAppSettingsStore } from "@/store/app-settings-store";
 import { useFontStore } from "@/store/font-store";
+import { applyUiFont } from "@/utils/font";
 import clsx from "clsx";
 import { Loader2, SquarePen, Trash2, Upload } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+const SYSTEM_DEFAULT_VALUE = "__system__";
+const FONT_WEIGHT_OPTIONS = [300, 400, 500, 600, 700];
+const FONT_WEIGHT_LABELS: Record<number, string> = {
+  300: "Light",
+  400: "Regular",
+  500: "Medium",
+  600: "SemiBold",
+  700: "Bold",
+};
+const UI_FONT_SIZE_OPTIONS = [12, 14, 16, 18, 20];
+const READER_FONT_SIZE_OPTIONS = [12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32];
+
+const getWeightLabel = (weight: number) => FONT_WEIGHT_LABELS[weight] ?? String(weight);
+
+const formatPreviewStyle = (family: string) => ({
+  fontFamily: family,
+});
+
+interface FontOption {
+  id: string;
+  label: string;
+  family: string;
+  source: "system" | "custom";
+  info?: SystemFontInfo | FontInfo;
+}
+
 export default function FontManager() {
-  const { fonts, isLoading, loadFonts, refreshFonts } = useFontStore();
+  const { settings, setSettings } = useAppSettingsStore();
+  const { fonts, systemFonts, isLoading, isSystemLoading, loadFonts, refreshFonts, loadSystemFonts } = useFontStore();
   const [downloadUrl, setDownloadUrl] = useState("");
   const [isDownloading, setIsDownloading] = useState(false);
   const [editingFont, setEditingFont] = useState<string | null>(null);
   const [editDisplayName, setEditDisplayName] = useState("");
+  const [uiFontQuery, setUiFontQuery] = useState("");
+  const [readerFontQuery, setReaderFontQuery] = useState("");
 
   useEffect(() => {
     loadFonts();
-  }, [loadFonts]);
+    loadSystemFonts();
+  }, [loadFonts, loadSystemFonts]);
 
   const { isDragOver, isUploading, handleDragOver, handleDragLeave, handleDrop, triggerFileSelect } =
     useFontUpload(refreshFonts);
@@ -78,60 +121,419 @@ export default function FontManager() {
     setEditDisplayName("");
   };
 
+  const systemFontOptions = useMemo<FontOption[]>(
+    () =>
+      systemFonts.map((font) => ({
+        id: `system-${font.family}`,
+        label: font.family,
+        family: font.family,
+        source: "system" as const,
+        info: font,
+      })),
+    [systemFonts],
+  );
+
+  const customFontOptions = useMemo<FontOption[]>(
+    () =>
+      fonts.map((font) => {
+        const family = font.fontFamily || font.name;
+        return {
+          id: `custom-${font.filename}`,
+          label: font.displayName || font.name,
+          family,
+          source: "custom" as const,
+          info: font,
+        };
+      }),
+    [fonts],
+  );
+
+  const readerFontOptions = useMemo(
+    () => [...systemFontOptions, ...customFontOptions],
+    [systemFontOptions, customFontOptions],
+  );
+
+  const filteredSystemFonts = useMemo(() => {
+    if (!uiFontQuery.trim()) return systemFontOptions;
+    const lowered = uiFontQuery.trim().toLowerCase();
+    return systemFontOptions.filter((font) => font.label.toLowerCase().includes(lowered));
+  }, [systemFontOptions, uiFontQuery]);
+
+  const readerFilteredSystemFonts = useMemo(() => {
+    if (!readerFontQuery.trim()) return systemFontOptions;
+    const lowered = readerFontQuery.trim().toLowerCase();
+    return systemFontOptions.filter((font) => font.label.toLowerCase().includes(lowered));
+  }, [systemFontOptions, readerFontQuery]);
+
+  const readerFilteredCustomFonts = useMemo(() => {
+    if (!readerFontQuery.trim()) return customFontOptions;
+    const lowered = readerFontQuery.trim().toLowerCase();
+    return customFontOptions.filter((font) => font.label.toLowerCase().includes(lowered));
+  }, [customFontOptions, readerFontQuery]);
+
+  const uiFontValue = settings.uiFontFamily?.trim() || SYSTEM_DEFAULT_VALUE;
+  const uiFontSize = settings.uiFontSize ?? 14;
+  const uiFontWeight = settings.uiFontWeight ?? 400;
+
+  const currentReaderFont = settings.globalViewSettings?.serifFont?.trim();
+  const readerFontValue =
+    readerFontOptions.find((opt) => opt.family === currentReaderFont)?.family || SYSTEM_DEFAULT_VALUE;
+  const readerFontSize = settings.globalViewSettings?.defaultFontSize ?? DEFAULT_BOOK_FONT.defaultFontSize;
+  const readerFontWeight = settings.globalViewSettings?.fontWeight ?? DEFAULT_BOOK_FONT.fontWeight;
+  const effectiveUiFontSizes = useMemo(() => {
+    if (UI_FONT_SIZE_OPTIONS.includes(uiFontSize)) {
+      return UI_FONT_SIZE_OPTIONS;
+    }
+    return Array.from(new Set([...UI_FONT_SIZE_OPTIONS, uiFontSize])).sort((a, b) => a - b);
+  }, [uiFontSize]);
+  const effectiveReaderFontSizes = useMemo(() => {
+    if (READER_FONT_SIZE_OPTIONS.includes(readerFontSize)) {
+      return READER_FONT_SIZE_OPTIONS;
+    }
+    return Array.from(new Set([...READER_FONT_SIZE_OPTIONS, readerFontSize])).sort((a, b) => a - b);
+  }, [readerFontSize]);
+  const effectiveFontWeights = useMemo(() => {
+    const weights = new Set(FONT_WEIGHT_OPTIONS);
+    weights.add(uiFontWeight);
+    weights.add(readerFontWeight);
+    return Array.from(weights).sort((a, b) => a - b);
+  }, [uiFontWeight, readerFontWeight]);
+
+  const updateSettings = (updater: (current: typeof settings) => typeof settings) => {
+    const { settings: currentSettings } = useAppSettingsStore.getState();
+    const updated = updater(currentSettings);
+    setSettings(updated);
+    return updated;
+  };
+
+  const handleUiFontChange = (value: string) => {
+    const selectedFont = value === SYSTEM_DEFAULT_VALUE ? "" : value;
+    setUiFontQuery("");
+    const updated = updateSettings((current) => ({
+      ...current,
+      uiFontFamily: selectedFont,
+    }));
+    applyUiFont(updated.uiFontFamily, updated.uiFontSize, updated.uiFontWeight);
+  };
+
+  const handleReaderFontChange = (value: string) => {
+    const targetFont =
+      value === SYSTEM_DEFAULT_VALUE
+        ? DEFAULT_BOOK_FONT.serifFont
+        : readerFontOptions.find((opt) => opt.family === value)?.family || DEFAULT_BOOK_FONT.serifFont;
+    setReaderFontQuery("");
+
+    const updated = updateSettings((current) => ({
+      ...current,
+      globalViewSettings: {
+        ...current.globalViewSettings,
+        serifFont: targetFont,
+        sansSerifFont: targetFont,
+        monospaceFont: targetFont,
+        defaultCJKFont: targetFont,
+      },
+    }));
+
+    if (updated.globalViewSettings.overrideFont) {
+      toast.success(`阅读字体已切换为 ${targetFont}`);
+    }
+  };
+
+  const handleUiFontSizeSelect = (value: string) => {
+    const numeric = Number.parseInt(value, 10);
+    if (Number.isNaN(numeric)) return;
+    const updated = updateSettings((current) => ({
+      ...current,
+      uiFontSize: numeric,
+    }));
+    applyUiFont(updated.uiFontFamily, updated.uiFontSize, updated.uiFontWeight);
+  };
+
+  const handleUiFontWeightSelect = (value: string) => {
+    const numeric = Number.parseInt(value, 10);
+    if (Number.isNaN(numeric)) return;
+    const updated = updateSettings((current) => ({
+      ...current,
+      uiFontWeight: numeric,
+    }));
+    applyUiFont(updated.uiFontFamily, updated.uiFontSize, updated.uiFontWeight);
+  };
+
+  const handleReaderFontSizeSelect = (value: string) => {
+    const numeric = Number.parseInt(value, 10);
+    if (Number.isNaN(numeric)) return;
+    updateSettings((current) => ({
+      ...current,
+      globalViewSettings: {
+        ...current.globalViewSettings,
+        defaultFontSize: numeric,
+      },
+    }));
+  };
+
+  const handleReaderFontWeightSelect = (value: string) => {
+    const numeric = Number.parseInt(value, 10);
+    if (Number.isNaN(numeric)) return;
+    updateSettings((current) => ({
+      ...current,
+      globalViewSettings: {
+        ...current.globalViewSettings,
+        fontWeight: numeric,
+      },
+    }));
+  };
+
   return (
     <div className="space-y-6 p-4 pt-3">
-      <section className="rounded-lg bg-muted/80 p-4 pt-3">
+      <section className="space-y-4 rounded-lg bg-muted/80 p-4 pt-3">
         <h2 className="text mb-4 dark:text-neutral-200">字体管理</h2>
 
-        <div
-          className={clsx(
-            "mb-4 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors",
-            isDragOver ? "border-primary bg-primary/10" : "border-neutral-300 dark:border-neutral-700",
+        <div className="space-y-3 rounded-md border border-neutral-200/70 bg-background p-3 dark:border-neutral-800 dark:bg-neutral-900/40">
+          <div>
+            <p className="font-medium text-neutral-800 text-sm dark:text-neutral-100">应用字体</p>
+            <p className="text-neutral-500 text-xs dark:text-neutral-400">选择界面和系统使用的字体</p>
+          </div>
+          {isSystemLoading ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="h-5 w-5 animate-spin text-neutral-400" />
+            </div>
+          ) : (
+            <Select value={uiFontValue} onValueChange={handleUiFontChange}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="系统默认">
+                  {uiFontValue === SYSTEM_DEFAULT_VALUE ? "系统默认" : uiFontValue}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="max-h-72 overflow-y-auto">
+                <div className="sticky top-0 z-10 bg-popover p-2">
+                  <Input
+                    value={uiFontQuery}
+                    onChange={(event) => setUiFontQuery(event.target.value)}
+                    placeholder="搜索字体..."
+                    className="h-8"
+                    onKeyDown={(event) => event.stopPropagation()}
+                    onPointerDown={(event) => event.stopPropagation()}
+                  />
+                </div>
+                <SelectGroup>
+                  <SelectItem value={SYSTEM_DEFAULT_VALUE}>系统默认</SelectItem>
+                  {filteredSystemFonts.length > 0 ? (
+                    filteredSystemFonts.map((font) => (
+                      <SelectItem key={font.id} value={font.family}>
+                        <span className="truncate" style={formatPreviewStyle(font.family)}>
+                          {font.label}
+                        </span>
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="py-6 text-center text-neutral-500 text-sm dark:text-neutral-400">
+                      未找到匹配字体
+                    </div>
+                  )}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           )}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          <Upload className="mb-2 h-8 w-8 text-neutral-400" />
-          <p className="mb-2 text-neutral-600 text-sm dark:text-neutral-400">拖拽 .woff2 或 .ttf 字体文件到此处</p>
-          <Button size="xs" onClick={triggerFileSelect} disabled={isUploading}>
-            {isUploading && <Loader2 className="h-4 w-4 animate-spin" />}
-            <span>{isUploading ? "处理中..." : "选择文件"}</span>
-          </Button>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <p className="font-medium text-neutral-600 text-xs dark:text-neutral-400">字体大小</p>
+              <Select value={String(uiFontSize)} onValueChange={handleUiFontSizeSelect}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="选择字号" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {effectiveUiFontSizes.map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}px
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <p className="font-medium text-neutral-600 text-xs dark:text-neutral-400">字体粗细</p>
+              <Select value={String(uiFontWeight)} onValueChange={handleUiFontWeightSelect}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="选择粗细" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {effectiveFontWeights.map((weight) => (
+                      <SelectItem key={weight} value={String(weight)}>
+                        {weight} · {getWeightLabel(weight)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
 
-        <div className="mb-4 flex gap-2 border-b pb-4">
-          <Input
-            placeholder="输入字体 URL (支持 .woff2 或 .ttf 格式)"
-            value={downloadUrl}
-            className="h-8"
-            onChange={(e) => setDownloadUrl(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleDownload();
-              }
-            }}
-          />
-          <Button variant="soft" onClick={handleDownload} disabled={isDownloading} className="h-8">
-            {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {isDownloading ? "下载中..." : "下载"}
-          </Button>
+        <div className="space-y-3 rounded-md border border-neutral-200/70 bg-background p-3 dark:border-neutral-800 dark:bg-neutral-900/40">
+          <div>
+            <p className="font-medium text-neutral-800 text-sm dark:text-neutral-100">阅读默认字体</p>
+            <p className="text-neutral-500 text-xs dark:text-neutral-400">设置阅读器使用的默认字体</p>
+          </div>
+          {isSystemLoading && readerFontOptions.length === 0 ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="h-5 w-5 animate-spin text-neutral-400" />
+            </div>
+          ) : (
+            <Select value={readerFontValue} onValueChange={handleReaderFontChange}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="系统默认">
+                  {readerFontValue === SYSTEM_DEFAULT_VALUE ? "系统默认" : readerFontValue}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="max-h-80 overflow-y-auto">
+                <div className="sticky top-0 z-10 bg-popover p-2">
+                  <Input
+                    value={readerFontQuery}
+                    onChange={(event) => setReaderFontQuery(event.target.value)}
+                    placeholder="搜索字体..."
+                    className="h-8"
+                    onKeyDown={(event) => event.stopPropagation()}
+                    onPointerDown={(event) => event.stopPropagation()}
+                  />
+                </div>
+                <SelectGroup>
+                  <SelectItem value={SYSTEM_DEFAULT_VALUE}>系统默认</SelectItem>
+                  {readerFilteredSystemFonts.length > 0 ? (
+                    <>
+                      <SelectLabel className="mt-1 text-neutral-500 text-xs dark:text-neutral-400">
+                        系统字体
+                      </SelectLabel>
+                      {readerFilteredSystemFonts.map((font) => (
+                        <SelectItem key={font.id} value={font.family}>
+                          <span className="truncate" style={formatPreviewStyle(font.family)}>
+                            {font.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </>
+                  ) : null}
+                  {readerFilteredCustomFonts.length > 0 && readerFilteredSystemFonts.length > 0 ? (
+                    <SelectSeparator />
+                  ) : null}
+                  {readerFilteredCustomFonts.length > 0 ? (
+                    <>
+                      <SelectLabel className="mt-2 text-neutral-500 text-xs dark:text-neutral-400">
+                        已安装字体
+                      </SelectLabel>
+                      {readerFilteredCustomFonts.map((font) => (
+                        <SelectItem key={font.id} value={font.family}>
+                          <span className="truncate" style={formatPreviewStyle(font.family)}>
+                            {font.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </>
+                  ) : null}
+                  {readerFilteredSystemFonts.length === 0 && readerFilteredCustomFonts.length === 0 ? (
+                    <div className="py-6 text-center text-neutral-500 text-sm dark:text-neutral-400">
+                      未找到匹配字体
+                    </div>
+                  ) : null}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          )}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <p className="font-medium text-neutral-600 text-xs dark:text-neutral-400">字体大小</p>
+              <Select value={String(readerFontSize)} onValueChange={handleReaderFontSizeSelect}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="选择字号" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {effectiveReaderFontSizes.map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}px
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <p className="font-medium text-neutral-600 text-xs dark:text-neutral-400">字体粗细</p>
+              <Select value={String(readerFontWeight)} onValueChange={handleReaderFontWeightSelect}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="选择粗细" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {effectiveFontWeights.map((weight) => (
+                      <SelectItem key={weight} value={String(weight)}>
+                        {weight} · {getWeightLabel(weight)}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4 rounded-md border border-neutral-200/70 bg-background p-3 dark:border-neutral-800 dark:bg-neutral-900/40">
+          <div>
+            <p className="font-medium text-neutral-800 text-sm dark:text-neutral-100">安装自定义字体</p>
+            <p className="text-neutral-500 text-xs dark:text-neutral-400">拖拽或粘贴字体文件，支持 .woff2 / .ttf</p>
+          </div>
+          <div
+            className={clsx(
+              "flex flex-col items-center justify-center rounded-md border-2 border-dashed p-5 transition-colors",
+              isDragOver ? "border-primary bg-primary/10" : "border-neutral-300 dark:border-neutral-700",
+            )}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <Upload className="mb-2 h-6 w-6 text-neutral-400" />
+            <p className="mb-2 text-neutral-600 text-xs dark:text-neutral-400">拖拽 .woff2 或 .ttf 字体文件到此处</p>
+            <Button size="xs" onClick={triggerFileSelect} disabled={isUploading}>
+              {isUploading && <Loader2 className="h-4 w-4 animate-spin" />}
+              <span>{isUploading ? "处理中..." : "选择文件"}</span>
+            </Button>
+          </div>
+
+          <div className="flex gap-2">
+            <Input
+              placeholder="输入字体 URL (支持 .woff2 或 .ttf 格式)"
+              value={downloadUrl}
+              className="h-8"
+              onChange={(e) => setDownloadUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleDownload();
+                }
+              }}
+            />
+            <Button variant="soft" onClick={handleDownload} disabled={isDownloading} className="h-8">
+              {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isDownloading ? "下载中..." : "下载"}
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-2">
           <h3 className="font-medium text-neutral-700 text-sm dark:text-neutral-300">已安装的字体</h3>
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-6">
               <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
             </div>
           ) : fonts.length === 0 ? (
-            <div className="rounded-md bg-neutral-100 p-4 text-center text-neutral-500 text-sm dark:bg-neutral-800 dark:text-neutral-400">
+            <div className="rounded-md bg-neutral-100 p-3 text-center text-neutral-500 text-sm dark:bg-neutral-800 dark:text-neutral-400">
               暂无已安装的字体
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {fonts.map((font) => (
-                <div key={font.filename} className="flex h-[48px] items-center justify-between border-b px-0 py-4">
+                <div key={font.filename} className="flex items-center justify-between rounded-md border px-3 py-2">
                   {editingFont === font.filename ? (
                     <div className="flex flex-1 items-center gap-2">
                       <Input
@@ -149,25 +551,27 @@ export default function FontManager() {
                     </div>
                   ) : (
                     <>
-                      <div className="flex-1 py-2">
-                        <p className="font-medium text-sm dark:text-neutral-200">{font.name}</p>
+                      <div className="flex-1 py-1">
+                        <p className="font-medium text-sm dark:text-neutral-200">{font.displayName || font.name}</p>
                         <p className="text-neutral-500 text-xs dark:text-neutral-400">
                           {font.fontFamily ? `Font Family: ${font.fontFamily}` : ""}
                         </p>
                       </div>
-                      <div className="flex">
-                        <div
-                          className="flex size-7 cursor-pointer items-center justify-center rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                      <div className="flex gap-1">
+                        <button
+                          className="flex size-7 items-center justify-center rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700"
                           onClick={() => handleEditClick(font)}
+                          title="编辑名称"
                         >
                           <SquarePen className="h-4 w-4" />
-                        </div>
-                        <div
-                          className="flex size-7 cursor-pointer items-center justify-center rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                        </button>
+                        <button
+                          className="flex size-7 items-center justify-center rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700"
                           onClick={() => handleDelete(font.filename)}
+                          title="删除字体"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </div>
+                        </button>
                       </div>
                     </>
                   )}

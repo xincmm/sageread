@@ -1,9 +1,104 @@
 import { listFonts } from "@/services/font-service";
+import { useAppSettingsStore } from "@/store/app-settings-store";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { appDataDir, resourceDir } from "@tauri-apps/api/path";
 import { isCJKEnv } from "./misc";
 
 let cachedBuiltInFontUrl: string | null = null;
+const SYSTEM_FONT_FALLBACK =
+  'system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"';
+const DEFAULT_SERIF_FALLBACK = '"Geist", "Geist Fallback", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif';
+
+const quoteIfNeeded = (font: string) => {
+  if (!font) return font;
+  return /\s/.test(font) && !/^".*"$/.test(font) ? `"${font}"` : font;
+};
+
+const normalizeFontSize = (value?: number | null) => {
+  if (typeof value !== "number" || Number.isNaN(value) || value <= 0) {
+    return null;
+  }
+  return `${value}px`;
+};
+
+const normalizeFontWeight = (value?: number | null) => {
+  if (typeof value !== "number" || Number.isNaN(value) || value <= 0) {
+    return null;
+  }
+  return `${Math.round(value)}`;
+};
+
+export const applyUiFont = (fontFamily?: string | null, fontSize?: number | null, fontWeight?: number | null) => {
+  if (typeof document === "undefined") return;
+  const root = document.documentElement;
+  const sanitized = fontFamily?.trim();
+  const fallbackSans = SYSTEM_FONT_FALLBACK;
+  const fallbackSerif = DEFAULT_SERIF_FALLBACK;
+  const cssFont = sanitized ? quoteIfNeeded(sanitized) : "";
+  const resolvedSans = cssFont ? `${cssFont}, ${fallbackSans}` : fallbackSans;
+  const resolvedSerif = cssFont ? `${cssFont}, ${fallbackSerif}` : fallbackSerif;
+
+  root.style.setProperty("--font-sans", resolvedSans);
+  root.style.setProperty("--font-serif", resolvedSerif);
+
+  const normalizedSize = normalizeFontSize(fontSize);
+  const normalizedWeight = normalizeFontWeight(fontWeight);
+
+  if (normalizedSize) {
+    root.style.setProperty("--app-font-size", normalizedSize);
+    root.style.fontSize = normalizedSize;
+    if (document.body) {
+      document.body.style.fontSize = normalizedSize;
+    }
+  } else {
+    root.style.removeProperty("--app-font-size");
+    root.style.removeProperty("font-size");
+    if (document.body) {
+      document.body.style.removeProperty("font-size");
+    }
+  }
+
+  if (normalizedWeight) {
+    root.style.setProperty("--app-font-weight", normalizedWeight);
+    root.style.fontWeight = normalizedWeight;
+    if (document.body) {
+      document.body.style.fontWeight = normalizedWeight;
+    }
+  } else {
+    root.style.removeProperty("--app-font-weight");
+    root.style.removeProperty("font-weight");
+    if (document.body) {
+      document.body.style.removeProperty("font-weight");
+    }
+  }
+
+  root.style.fontFamily = resolvedSans;
+  if (document.body) {
+    document.body.style.fontFamily = resolvedSans;
+  }
+};
+
+export const applyUiFontFromSettings = () => {
+  try {
+    const { settings } = useAppSettingsStore.getState();
+    applyUiFont(settings.uiFontFamily, settings.uiFontSize, settings.uiFontWeight);
+  } catch (error) {
+    console.error("[Font] Failed to apply UI font from settings:", error);
+  }
+};
+
+if (typeof window !== "undefined") {
+  useAppSettingsStore.subscribe(
+    (state) => ({
+      fontFamily: state.settings.uiFontFamily,
+      fontSize: state.settings.uiFontSize,
+      fontWeight: state.settings.uiFontWeight,
+    }),
+    ({ fontFamily, fontSize, fontWeight }) => {
+      applyUiFont(fontFamily, fontSize, fontWeight);
+    },
+  );
+}
 
 const getBuiltInFontUrl = async (): Promise<string> => {
   if (cachedBuiltInFontUrl) {
@@ -110,6 +205,8 @@ export const mountFontsToMainApp = async () => {
       style.textContent = builtInFontFaces;
       document.head.appendChild(style);
     }
+
+    applyUiFontFromSettings();
   } catch (error) {
     console.error("[Font] Failed to load fonts to main app:", error);
   }

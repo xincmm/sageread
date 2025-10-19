@@ -3,6 +3,7 @@ import { Message, MessageAction, MessageActions, MessageContent } from "@/compon
 import { Reasoning, ReasoningContent, ReasoningTrigger } from "@/components/prompt-kit/reasoning";
 import { Tool } from "@/components/prompt-kit/tool";
 import { Button } from "@/components/ui/button";
+import { QuoteBlock } from "@/components/ui/quote-block";
 import { useIsChatPage } from "@/hooks/use-is-chat-page";
 import { type ReasoningTimes, useReasoningTimer } from "@/hooks/use-reasoning-timer";
 import { useTextSelection } from "@/hooks/use-text-selection";
@@ -12,7 +13,7 @@ import { useTTSStore } from "@/store/tts-store";
 import { getReasoningTimes } from "@/types/message";
 import type { UIMessage, UIMessagePart } from "ai";
 import dayjs from "dayjs";
-import { Brain, Check, Copy, Loader2, Pause, Quote, RefreshCw, Volume2 } from "lucide-react";
+import { Brain, Check, Copy, Loader2, Pause, RefreshCw, Volume2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useStickToBottomContext } from "use-stick-to-bottom";
@@ -263,15 +264,9 @@ export function ChatMessages({
       if (type === "quote") {
         flushText();
         elements.push(
-          <div
-            key={`quote-${i}`}
-            className="flex max-w-full items-start gap-1 rounded-lg text-muted-foreground text-sm leading-4.5"
-          >
-            <span className="mt-0.5 flex-nowrap">
-              <Quote className="size-3" />
-            </span>
-            <span className="flex-1 whitespace-pre-wrap break-words text-left">{part.text}</span>
-          </div>,
+          <QuoteBlock key={`quote-${i}`} className="leading-[18px]">
+            {part.text}
+          </QuoteBlock>,
         );
         continue;
       }

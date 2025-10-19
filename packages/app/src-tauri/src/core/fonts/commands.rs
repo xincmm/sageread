@@ -1,8 +1,16 @@
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_shell::ShellExt;
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SystemFontInfo {
+    pub family: String,
+    pub is_monospace: bool,
+    pub sources: Vec<String>,
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FontInfo {
@@ -176,4 +184,53 @@ pub async fn upload_font_data(
     let _ = fs::remove_file(&temp_path);
     
     Ok(result)
+}
+
+fn map_font_source(source: &fontdb::Source) -> Option<String> {
+    #[allow(unreachable_patterns)]
+    match source {
+        fontdb::Source::File(path) => Some(path.to_string_lossy().to_string()),
+        fontdb::Source::SharedFile(path, _) => Some(path.to_string_lossy().to_string()),
+        _ => None,
+    }
+}
+
+#[tauri::command]
+pub async fn list_system_fonts() -> Result<Vec<SystemFontInfo>, String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        let mut db = fontdb::Database::new();
+        db.load_system_fonts();
+
+        let mut families: BTreeMap<String, SystemFontInfo> = BTreeMap::new();
+
+        for face in db.faces() {
+            let is_monospace = face.monospaced;
+            let source_path = map_font_source(&face.source);
+
+            for (name, _) in &face.families {
+                let entry = families.entry(name.to_string()).or_insert_with(|| SystemFontInfo {
+                    family: name.to_string(),
+                    is_monospace,
+                    sources: Vec::new(),
+                });
+
+                if is_monospace {
+                    entry.is_monospace = true;
+                }
+
+                if let Some(path) = &source_path {
+                    if !entry.sources.contains(path) {
+                        entry.sources.push(path.clone());
+                    }
+                }
+            }
+        }
+
+        let mut fonts: Vec<SystemFontInfo> = families.into_values().collect();
+        fonts.sort_by(|a, b| a.family.to_lowercase().cmp(&b.family.to_lowercase()));
+
+        Ok(fonts)
+    })
+    .await
+    .map_err(|e| format!("获取系统字体失败: {e}"))?
 }

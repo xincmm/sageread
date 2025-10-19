@@ -344,8 +344,13 @@ export class FoliateViewerManager {
 
   // Public API methods
   updateViewSettings(settings: Partial<ViewSettings>): void {
+    this.config.globalViewSettings = {
+      ...this.config.globalViewSettings,
+      ...settings,
+    };
+
     if (this.styleManager) {
-      this.styleManager.updateSettings(settings);
+      this.styleManager.updateSettings(this.config.globalViewSettings);
     }
   }
 

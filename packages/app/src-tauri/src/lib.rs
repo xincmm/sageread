@@ -24,7 +24,7 @@ use crate::core::{
         update_reading_session,
     },
     database,
-    fonts::commands::{upload_and_convert_font, upload_font_data},
+    fonts::commands::{list_system_fonts, upload_and_convert_font, upload_font_data},
     llama::commands::{
         delete_local_model, download_llama_server, download_model_file,
         ensure_llamacpp_directories, get_app_data_dir, get_llamacpp_backend_path, greet,
@@ -165,6 +165,7 @@ pub fn run() {
             // fonts
             upload_and_convert_font,
             upload_font_data,
+            list_system_fonts,
             // llama
             greet,
             get_app_data_dir,

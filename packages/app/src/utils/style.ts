@@ -224,6 +224,21 @@ const getLayoutStyles = (
   }
   h1, h2, h3, h4, h5, h6 {
     text-align: initial;
+    padding-bottom: 0.35em ${overrideLayout ? "!important" : ""};
+  }
+
+  :is(h1, h2, h3, h4, h5, h6, header, hgroup):has(+ :is(hr, [role="separator"], [class*="divider" i], [class*="separator" i], [class*="line" i])) {
+    padding-bottom: 0.6em ${overrideLayout ? "!important" : ""};
+  }
+
+  :is(h1, h2, h3, h4, h5, h6, header, hgroup)
+    + :is(hr, [role="separator"], [class*="divider" i], [class*="separator" i], [class*="line" i]) {
+    margin-top: 1.6em ${overrideLayout ? "!important" : ""};
+  }
+
+  :is(h1, h2, h3, h4, h5, h6, header, hgroup)
+    + :is(div, p, section, header, hgroup):has(> :is(hr, [role="separator"], [class*="divider" i], [class*="separator" i], [class*="line" i])) {
+    margin-top: 1.6em ${overrideLayout ? "!important" : ""};
   }
 
   :lang(zh), :lang(ja), :lang(ko) {

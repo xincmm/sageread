@@ -10,7 +10,7 @@ import type {
   ViewConfig,
   ViewSettings,
 } from "@/types/book";
-import type { ReadSettings, SystemSettings } from "@/types/settings";
+import type { ReadSettings, ReaderShortcutConfig, SystemSettings } from "@/types/settings";
 import type { UserDailyTranslationQuota, UserStorageQuota } from "@/types/user";
 import { getDefaultMaxBlockSize, getDefaultMaxInlineSize } from "@/utils/config";
 import { stubTranslation as _ } from "@/utils/misc";
@@ -26,6 +26,14 @@ export const BOOK_UNGROUPED_ID = "";
 
 export const SUPPORTED_IMAGE_EXTS = ["png", "jpg", "jpeg"];
 export const IMAGE_ACCEPT_FORMATS = SUPPORTED_IMAGE_EXTS.map((ext) => `.${ext}`).join(", ");
+
+export const DEFAULT_READER_SHORTCUTS: ReaderShortcutConfig = {
+  copy: "c",
+  explain: "e",
+  askAI: "a",
+  toggleHighlight: "h",
+  addNote: "n",
+};
 
 export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   keepLogin: false,
@@ -47,6 +55,10 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   lastSyncedAtBooks: 0,
   lastSyncedAtConfigs: 0,
   lastSyncedAtNotes: 0,
+  uiFontFamily: "",
+  uiFontSize: 14,
+  uiFontWeight: 400,
+  readerShortcuts: { ...DEFAULT_READER_SHORTCUTS },
 };
 
 export const DEFAULT_READSETTINGS: ReadSettings = {

@@ -5,6 +5,7 @@ import {
   DEFAULT_BOOK_LAYOUT,
   DEFAULT_BOOK_STYLE,
   DEFAULT_CJK_VIEW_SETTINGS,
+  DEFAULT_READER_SHORTCUTS,
   DEFAULT_READSETTINGS,
   DEFAULT_SYSTEM_SETTINGS,
   DEFAULT_VIEW_CONFIG,
@@ -38,9 +39,16 @@ export const useAppSettingsStore = create<AppSettingsState>()(
             ...(isCJKEnv() ? DEFAULT_CJK_VIEW_SETTINGS : {}),
             ...DEFAULT_VIEW_CONFIG,
           },
+          readerShortcuts: { ...DEFAULT_READER_SHORTCUTS },
         } as SystemSettings,
         toggleSettingsDialog: () => set((state) => ({ isSettingsDialogOpen: !state.isSettingsDialogOpen })),
-        setSettings: (settings: SystemSettings) => set({ settings }),
+        setSettings: (settings: SystemSettings) =>
+          set({
+            settings: {
+              ...settings,
+              readerShortcuts: { ...DEFAULT_READER_SHORTCUTS, ...(settings.readerShortcuts ?? {}) },
+            },
+          }),
       }),
       {
         name: tauriStorageKey.appSettings,

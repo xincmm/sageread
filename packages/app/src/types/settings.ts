@@ -1,6 +1,10 @@
 import type { CustomTheme } from "@/styles/themes";
 import type { HighlightColor, HighlightStyle, ViewSettings } from "./book";
 
+export type ReaderShortcutAction = "copy" | "explain" | "askAI" | "toggleHighlight" | "addNote";
+
+export type ReaderShortcutConfig = Record<ReaderShortcutAction, string>;
+
 export type LibraryViewModeType = "grid" | "list";
 export type LibrarySortByType = "title" | "author" | "updated" | "created" | "size" | "format";
 export type LibraryCoverFitType = "crop" | "fit";
@@ -45,4 +49,8 @@ export interface SystemSettings {
 
   globalReadSettings: ReadSettings;
   globalViewSettings: ViewSettings;
+  readerShortcuts: ReaderShortcutConfig;
+  uiFontFamily?: string;
+  uiFontSize?: number;
+  uiFontWeight?: number;
 }
