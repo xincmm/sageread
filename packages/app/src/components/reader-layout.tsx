@@ -36,7 +36,7 @@ export default function ReaderLayout() {
   const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showOverlay, setShowOverlay] = useState(false);
 
-  const isWindows = getOSPlatform() === "windows";
+  const isWindowsOrLinux = getOSPlatform() === "windows" || getOSPlatform() === "linux";
 
   useEffect(() => {
     const handleResize = () => {
@@ -93,7 +93,7 @@ export default function ReaderLayout() {
           darkMode={isDarkMode}
           className="h-7"
           enableDragRegion={true}
-          marginLeft={isWindows ? 0 : 60}
+          marginLeft={isWindowsOrLinux ? 0 : 60}
           pinnedLeft={
             <div className="mx-2 flex items-center gap-2" onClick={navigateToHome}>
               <HomeIcon className="size-5 text-neutral-700 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-200" />

@@ -23,13 +23,17 @@ pub async fn save_book(app_handle: AppHandle, data: BookUploadData) -> Result<Si
 
     let epub_filename = format!("book.{}", data.format.to_lowercase());
     let epub_path = book_dir.join(&epub_filename);
-    std::fs::rename(&data.temp_file_path, &epub_path)
-        .map_err(|e| format!("移动书籍文件失败: {}", e))?;
+    fs::copy(&data.temp_file_path, &epub_path)
+        .map_err(|e| format!("复制书籍文件失败: {}", e))?;
+    fs::remove_file(&data.temp_file_path)
+        .map_err(|e| format!("删除临时书籍文件失败: {}", e))?;
 
     let cover_path = if let Some(cover_temp_path) = &data.cover_temp_file_path {
         let cover_file = book_dir.join("cover.jpg");
-        std::fs::rename(cover_temp_path, &cover_file)
-            .map_err(|e| format!("移动封面文件失败: {}", e))?;
+        fs::copy(cover_temp_path, &cover_file)
+            .map_err(|e| format!("复制封面文件失败: {}", e))?;
+        fs::remove_file(cover_temp_path)
+            .map_err(|e| format!("删除临时封面文件失败: {}", e))?;
         Some(format!("books/{}/cover.jpg", data.id))
     } else {
         None
